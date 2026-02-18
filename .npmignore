@@ -2,18 +2,25 @@
 docs/
 *.md
 !README.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+CODEOWNERS
 
-# Test files
-tests/
-test/
+# Test and mock files
 __tests__/
-jest.config.js
+__mocks__/
+**/__tests__/
+**/__mocks__/
 coverage/
+jest.config.js
 
 # Backup folders
 backups/
 *.backup
 *.bak
+*.swp
+*.tgz
+db-controller.js.backup
 
 # Local configuration files
 .env
