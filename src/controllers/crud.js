@@ -7,6 +7,7 @@
 import { newID, isValidID, db } from '../db/index.js'
 import utils from '../utils/index.js'
 import { _contextid, idNegotiation, generateSlugId, ObjectID, createExpressError, getAgentClaim, parseDocumentID } from './utils.js'
+import { getIdById, getLocationHeader } from '../services/crudService.js'
 
 /**
  * Create a new Linked Open Data object in RERUM v1.
@@ -89,34 +90,43 @@ const query = async function (req, res, next) {
 }
 
 /**
- * Query the MongoDB for objects with the _id provided in the request body or request URL
- * Note this specifically checks for _id, the @id pattern is irrelevant.  
- * Note /v1/id/{blank} does not route here.  It routes to the generic 404
- * */
+ * Get an object by ID - HTTP Controller
+ * This controller handles only HTTP request/response concerns.
+ * All business logic and database operations are delegated to crudService.
+ * 
+ * Note: /v1/id/{blank} does not route here. It routes to the generic 404
+ */
 const id = async function (req, res, next) {
     res.set("Content-Type", "application/json; charset=utf-8")
-    let id = req.params["_id"]
+    const idParam = req.params["_id"]
+    
     try {
-        let match = await db.findOne({"$or": [{"_id": id}, {"__rerum.slug": id}]})
-        if (match) {
-            res.set(utils.configureWebAnnoHeadersFor(match))
-            //Support built in browser caching
-            res.set("Cache-Control", "max-age=86400, must-revalidate")
-            //Support requests with 'If-Modified_Since' headers
-            res.set(utils.configureLastModifiedHeader(match))
-            // Include current version for optimistic locking
-            const currentVersion = match.__rerum?.isOverwritten ?? ""
-            res.set('Current-Overwritten-Version', currentVersion)
-            match = idNegotiation(match)
-            res.location(_contextid(match["@context"]) ? match.id : match["@id"])
-            res.json(match)
+        // Delegate business logic to service
+        const match = await getIdById(idParam)
+        
+        if (!match) {
+            const err = {
+                message: `No RERUM object with id '${idParam}'`,
+                status: 404
+            }
+            next(createExpressError(err))
             return
         }
-        let err = {
-            "message": `No RERUM object with id '${id}'`,
-            "status": 404
-        } 
-        next(createExpressError(err))
+        
+        // HTTP response handling only
+        res.set(utils.configureWebAnnoHeadersFor(match))
+        res.set("Cache-Control", "max-age=86400, must-revalidate")
+        res.set(utils.configureLastModifiedHeader(match))
+        
+        // Include current version for optimistic locking
+        const currentVersion = match.__rerum?.isOverwritten ?? ""
+        res.set('Current-Overwritten-Version', currentVersion)
+        
+        // Apply id negotiation
+        const negotiatedMatch = idNegotiation(match)
+        res.location(getLocationHeader(negotiatedMatch))
+        res.json(negotiatedMatch)
+        
     } catch (error) {
         next(createExpressError(error))
     }
