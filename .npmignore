@@ -27,3 +27,8 @@ db-controller.js.backup
 .env.*
 config.local.js
 *.local.js
+
+.github/ 
+.claude/ 
+.env
+.env.*
