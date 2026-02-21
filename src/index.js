@@ -7,11 +7,11 @@ import dotenv from 'dotenv'
 dotenv.config()
 import logger from 'morgan'
 import cors from 'cors'
-import indexRouter from './services/index.js'
-import apiRouter from './services/api-routes.js'
-import clientRouter from './services/client.js'
-import _gog_fragmentsRouter from './services/_gog_fragments_from_manuscript.js';
-import _gog_glossesRouter from './services/_gog_glosses_from_manuscript.js';
+import indexRouter from './routes/home.js'
+import apiRouter from './routes/api-routes.js'
+import clientRouter from './routes/client.js'
+import _gog_fragmentsRouter from './routes/_gog_fragments_from_manuscript.js'
+import _gog_glossesRouter from './routes/_gog_glosses_from_manuscript.js'
 import rest from './utils/rest.js'
 import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
