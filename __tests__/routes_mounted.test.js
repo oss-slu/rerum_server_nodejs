@@ -6,7 +6,7 @@
  */
 
 import request from "supertest"
-import api_routes from "../src/services/api-routes.js"
+import api_routes from "../src/routes/api-routes.js"
 import app from "../src/index.js"
 import fs from "fs"
 
