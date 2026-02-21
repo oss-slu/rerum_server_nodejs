@@ -35,7 +35,7 @@ npm start                                             # Start server (http://loc
 ```bash
 npm run runtest                                       # Run full test suite (25+ minutes, requires MongoDB)
 npm run runtest -- __tests__/routes_mounted.test.js  # Run route mounting tests (30 seconds, no DB needed)
-npm run runtest -- routes/__tests__/create.test.js   # Run specific test file
+npm run runtest -- src/routes/__tests__/create.test.js   # Run specific test file
 ```
 
 **Important:** Use `npm run runtest` (not `npm test`) as it enables experimental VM modules required for ES6 imports in Jest.
@@ -60,27 +60,27 @@ curl -X POST http://localhost:3001/v1/api/query -H "Content-Type: application/js
 The application follows a **layered architecture** with clear separation of concerns:
 
 ```
-app.js (Express setup, middleware)
+src/index.js (Express app setup, middleware)
   ↓
-routes/api-routes.js (route mounting & definitions)
+src/routes/api-routes.js (route mounting & definitions)
   ↓
-routes/*.js (individual route handlers with JWT auth)
+src/routes/*.js (individual route handlers with JWT auth)
   ↓
-db-controller.js (controller aggregator)
+src/routes/db-controller.js (controller aggregator)
   ↓
-controllers/*.js (business logic modules)
+src/controllers/*.js (business logic modules)
   ↓
-database/index.js (MongoDB connection & operations)
+src/db/index.js (MongoDB connection & operations)
 ```
 
 ### Key Architectural Components
 
 **1. Request Flow:**
 - Client → Express middleware (CORS, logging, body parsing)
-- → Auth middleware (JWT validation via Auth0)
-- → Route handlers (routes/*.js)
-- → Controllers (controllers/*.js with business logic)
-- → Database operations (MongoDB via database/index.js)
+- → Auth middleware (JWT validation via Auth0, src/auth/index.js)
+- → Route handlers (src/routes/*.js)
+- → Controllers (src/controllers/*.js with business logic)
+- → Database operations (MongoDB via src/db/index.js)
 - → Response with proper Linked Data HTTP headers
 
 **2. Versioning System:**
@@ -92,8 +92,8 @@ database/index.js (MongoDB connection & operations)
 - Released objects are immutable (isReleased !== "")
 
 **3. Controllers Organization:**
-The `db-controller.js` is a facade that imports from specialized controller modules:
-- `controllers/crud.js`: Core create, query, id operations
+The `src/routes/db-controller.js` is a facade that imports from specialized controller modules in `src/controllers/`:
+- `controllers/crud.js`: Core create, query, id operations (id() delegates to src/services/crudService.js)
 - `controllers/update.js`: PUT/PATCH update operations (putUpdate, patchUpdate, patchSet, patchUnset, overwrite)
 - `controllers/delete.js`: Delete operations
 - `controllers/history.js`: Version history and since queries, HEAD request handlers
@@ -105,7 +105,7 @@ The `db-controller.js` is a facade that imports from specialized controller modu
 
 **4. Authentication & Authorization:**
 - **Provider:** Auth0 JWT bearer tokens
-- **Middleware:** `auth/index.js` with express-oauth2-jwt-bearer
+- **Middleware:** `src/auth/index.js` with express-oauth2-jwt-bearer
 - **Flow:** checkJwt array includes READONLY check, Auth0 validation, token error handling, user extraction
 - **Agent Matching:** Write operations verify `req.user` matches `__rerum.generatedBy`
 - **Bot Access:** Special bot tokens (BOT_TOKEN, BOT_AGENT) bypass some checks
@@ -119,16 +119,16 @@ The `db-controller.js` is a facade that imports from specialized controller modu
 ### Directory Structure
 
 ```
-/bin/                   Entry point (rerum_v1.js creates HTTP server)
-/routes/                Route handlers (one file per endpoint typically)
-/controllers/           Business logic organized by domain
-/auth/                  Authentication middleware and token handling
-/database/              MongoDB connection and utilities
+/bin/                   Entry point (rerum_v1.js creates HTTP server, imports src/index.js)
+/src/
+  index.js              Express app setup and middleware configuration
+  routes/               Route handlers (api-routes.js, home.js, id.js, create.js, etc.)
+  controllers/          Business logic organized by domain
+  auth/                 Authentication middleware and token handling (Auth0 JWT)
+  db/                   MongoDB connection and utilities
+  services/             Business/service layer (e.g. crudService.js for id-by-id logic)
+  utils/                Core utilities (__rerum configuration, header generation), rest.js
 /public/                Static files (API.html docs, context.json)
-/utils.js               Core utilities (__rerum configuration, header generation)
-/rest.js                REST error handling and messaging
-/app.js                 Express app setup and middleware configuration
-/db-controller.js       Controller facade exporting all operations
 ```
 
 ## Important Patterns and Conventions
@@ -205,7 +205,7 @@ BOT_AGENT=your-bot-agent-url
 ## Testing Notes
 
 - **Route tests** (`__tests__/routes_mounted.test.js`): Work without MongoDB, verify routing and static files
-- **Controller tests** (`routes/__tests__/*.test.js`): Require MongoDB connection or will timeout after 5 seconds
+- **Controller tests** (`src/routes/__tests__/*.test.js`): Require MongoDB connection or will timeout after 5 seconds
 - Tests use experimental VM modules, hence `npm run runtest` instead of `npm test`
 - "Jest did not exit" warnings are normal—tests complete successfully despite this
 - Most tests expect Auth0 to be configured; mock tokens are used in test environment
