@@ -10,40 +10,31 @@ import { newID, isValidID, db } from '../database/index.js'
 import utils from '../utils.js'
 import { _contextid, ObjectID, createExpressError, getAgentClaim, parseDocumentID, idNegotiation } from './utils.js'
 
-//Helper function to standardize JSON responses
+/**
+ * Sets standard JSON response headers on the Express response object.
+ * @param {import('express').Response} res - Express response object
+ */
 function setJsonHeaders(res) {
     res.set("Content-Type", "application/json; charset=utf-8")
 }
 
-//Helper function for express errors
-function fail(next, message, status = 400) {
-    const err = { message, status }
-    next(createExpressError(err))
-}
 
 //function to validate request body is a non-empty array
-function requireNonEmptyArrayBody(req, next) {
+function requireNonEmptyArrayBody(req) {
     const documents = req.body
     if (!Array.isArray(documents)) {
-        fail(next, "The request body must be an array of objects.", 400)
-        return null
+        throw { message: "The request body must be an array of objects.", status: 400 }
     }
     if (documents.length === 0) {
-        fail(next, "No action on an empty array.", 400)
-        return null
+        throw { message: "No action on an empty array.", status: 400 }
     }
     return documents
 }
 
+
 //check if an item is valid JSON object (not array)
 function isValidJsonObject(d) {
-    if (d == null || Array.isArray(d) || typeof d !== "object") return false
-    try {
-        JSON.parse(JSON.stringify(d))
-    } catch (err) {
-        return false
-    }
-    return true
+    return d !== null && typeof d === "object" && !Array.isArray(d)
 }
 
 /**
@@ -54,8 +45,12 @@ function isValidJsonObject(d) {
 const bulkCreate = async function (req, res, next) {
     setJsonHeaders(res)
 
-    const documents = requireNonEmptyArrayBody(req, next)
-    if (!documents) return
+    let documents
+    try {
+        documents = requireNonEmptyArrayBody(req)
+    } catch (err) {
+        return next(createExpressError(err))
+    }
     
     const gatekeep = documents.filter(d=> {
         // Each item must be valid JSON, but can't be an array.
@@ -66,8 +61,10 @@ const bulkCreate = async function (req, res, next) {
         if(idcheck) return d
     }) 
     if (gatekeep.length > 0) {
-        fail(next, "All objects in the body of a `/bulkCreate` must be JSON and must not contain a declared identifier property.", 400) 
-        return
+        return next(createExpressError({
+            message: "All objects in the body of a `/bulkCreate` must be JSON and must not contain a declared identifier property.",
+            status: 400
+        }))
     }
 
     // TODO: bulkWrite SLUGS? Maybe assign an id to each document and then use that to create the slug?
@@ -100,7 +97,6 @@ const bulkCreate = async function (req, res, next) {
     }
     try {
         let dbResponse = await db.bulkWrite(bulkOps, {'ordered':false})
-        setJsonHeaders(res)
         res.set("Link",dbResponse.result.insertedIds.map(r => `${process.env.RERUM_ID_PREFIX}${r._id}`)) // https://www.rfc-editor.org/rfc/rfc5988
         res.status(201)
         const estimatedResults = bulkOps.map(f=>{
@@ -126,22 +122,26 @@ const bulkCreate = async function (req, res, next) {
 const bulkUpdate = async function (req, res, next) {
     setJsonHeaders(res)
 
-    const documents = requireNonEmptyArrayBody(req, next)
-    if (!documents) return
+    let documents
+    try {
+        documents = requireNonEmptyArrayBody(req)
+    } catch (err) {
+        return next(createExpressError(err))
+    }
 
-    let encountered = []
 
     const gatekeep = documents.filter(d => {
-        // Each item must be valid JSON, but can't be an array.
-        if (!isValidJsonObject(d)) return d
-        // Items must have an @id, or in some cases an id will do
+    if (!isValidJsonObject(d)) return true
         const idcheck = _contextid(d["@context"]) ? (d.id ?? d["@id"]) : d["@id"]
-        if(!idcheck) return d
+        if (idcheck) return true
+        return false
     })
     // The empty {}s will cause this error
     if (gatekeep.length > 0) {
-        fail(next, "All objects in the body of a `/bulkUpdate` must be JSON and must contain a declared identifier property.", 400)
-        return
+        return next(createExpressError({
+            message: "All objects in the body of a `/bulkCreate` must be JSON and must not contain a declared identifier property.",
+            status: 400
+        }))
     }
     // unordered bulkWrite() operations have better performance metrics.
     let bulkOps = []
@@ -150,8 +150,7 @@ const bulkUpdate = async function (req, res, next) {
         // We know it has an id
         const idReceived = objectReceived["@id"] ?? objectReceived.id
         // Update the same thing twice?  can vs should.
-        // if(encountered.includes(idReceived)) continue
-        encountered.push(idReceived)
+    
         if(!idReceived.includes(process.env.RERUM_ID_PREFIX)) continue
         let id = parseDocumentID(idReceived)
         let originalObject
@@ -188,7 +187,6 @@ const bulkUpdate = async function (req, res, next) {
     }
     try {
         let dbResponse = await db.bulkWrite(bulkOps, {'ordered':false})
-        setJsonHeaders(res)
         res.set("Link", dbResponse.result.insertedIds.map(r => `${process.env.RERUM_ID_PREFIX}${r._id}`)) // https://www.rfc-editor.org/rfc/rfc5988
         res.status(200)
         const estimatedResults = bulkOps.filter(f=>f.insertOne).map(f=>{

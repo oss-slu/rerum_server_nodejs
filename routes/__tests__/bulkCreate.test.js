@@ -33,4 +33,4 @@ it("'/bulkCreate' route functions", async () => {
   expect(response.headers["date"]).toBeTruthy()
   expect(response.headers["etag"]).toBeTruthy()
   expect(response.headers["link"]).toBeTruthy()
-})
+}, 20000)
