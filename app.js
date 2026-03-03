@@ -3,8 +3,7 @@
 import express from 'express'
 import path from 'path'
 import cookieParser from 'cookie-parser'
-import dotenv from 'dotenv'
-dotenv.config()
+import config from './config/index.js'
 import logger from 'morgan'
 import cors from 'cors'
 import indexRouter from './routes/index.js'
@@ -58,6 +57,7 @@ app.use(
 )
 app.use(logger('dev'))
 app.use(express.json())
+app.use(express.text())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
@@ -69,8 +69,8 @@ app.use(express.static(path.join(__dirname, 'public')))
  * If we are, then show the sad puppy.  Otherwise, continue on.
  * This is without middleware
  */
-app.all('*', (req, res, next) => {
-  if(process.env.DOWN === "true"){
+app.all('*_', (req, res, next) => {
+  if(config.DOWN === "true"){
       res.status(503).json({"message":"RERUM v1 is down for updates or maintenance at this time.  We apologize for the inconvenience.  Try again later."})
   }
   else{
