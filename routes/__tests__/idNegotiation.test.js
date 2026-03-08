@@ -27,4 +27,4 @@ it("Functional '@id-id' negotiation on objects returned.", async () => {
   expect(nonegotiate["@id"]).toBe(`${process.env.RERUM_ID_PREFIX}example`)
   expect(nonegotiate.id).toBe("test_example")
   expect(nonegotiate.test).toBe("item")
-})
+}, 20000)

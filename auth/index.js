@@ -1,5 +1,6 @@
 import { auth } from 'express-oauth2-jwt-bearer'
 import config from '../config/index.js'
+import tokenRefreshMiddleware from './token-refresh-middleware.js'
 
 const _tokenError = function (err, req, res, next) {
     if(!err.code || err.code !== "invalid_token"){ 
@@ -42,7 +43,7 @@ const _extractUser = (req, res, next) => {
  *   // do authorized things
  * });
  */
-const checkJwt = [READONLY, auth(), _tokenError, _extractUser]
+const checkJwt = [READONLY, tokenRefreshMiddleware, auth(), _tokenError, _extractUser]
 
 /**
  * Public API proxy to generate new access tokens through Auth0
