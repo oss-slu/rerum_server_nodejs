@@ -23,7 +23,7 @@ export default app
  * additional listeners or configure timeouts before calling
  * `server.listen(...)`.
  *
- * @param {number|string} [port=process.env.PORT||3001] port to assign to
+ * @param {number|string} [port=process.env.PORT??3001] port to assign to
  *        the express app and eventually listen on
  * @returns {import('http').Server} http server instance
  */
@@ -50,6 +50,19 @@ export function start(port) {
   server.listen(p)
   server.on('listening', () => {
     console.log('LISTENING ON ' + p)
+  })
+  server.on('error', (error) => {
+    if (error.syscall !== 'listen') throw error
+    switch (error.code) {
+      case 'EACCES':
+        console.error(`Port ${p} requires elevated privileges`)
+        process.exit(1)
+      case 'EADDRINUSE':
+        console.error(`Port ${p} is already in use`)
+        process.exit(1)
+      default:
+        throw error
+    }
   })
   return server
 }
