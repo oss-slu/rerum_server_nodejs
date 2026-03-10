@@ -98,6 +98,44 @@ MONGODBCOLLECTION = OBTAINED_FROM_MONGODB_SET_UP
 DOWN = false
 READONLY = false
 ```
+#### Add .env.example instructions
+##### Using `.env.example` for Community Testing
+To allow the application to run safely without exposing secrets:
+1. Copy the example environment file to `.env`:
+   ```bash
+   cp .env.example .env
+2. .env.example contains dummy values for all required variables. You do not need real credentials to run the app locally.
+3. Note:
+   Write actions (create, update, delete) may not work without valid Auth0 credentials.
+   You can still explore the API, MongoDB, and UI for testing purposes.
+   #### Instructions
+   1. Running the RERUM API with Docker
+      Ensure Docker and Docker Compose are installed.
+      Copy the example environment file:
+      bash
+      Copy code
+      cp .env.example .env
+
+   2. Build and start the containers:
+       bash
+       Copy code
+       docker-compose up --build
+
+Services will be available at:
+RERUM API → http://localhost:3001
+Mongo Express → http://localhost:8081
+Local Auth0 → http://localhost:3002
+
+   3. To stop the containers:
+      bash
+      Copy code
+      docker-compose down
+
+4. This setup uses dummy credentials so the API runs safely. For full Auth0 functionality, replace the dummy values in .env with real credentials. 
+5. The .env.example file contains safe dummy credentials:
+   Auth0 CLIENT_ID, CLIENT_SECRET
+   Bot tokens
+6. You can safely run the application with these values without affecting real data.
 
 #### Set Up Auth0 Authorization
 Please contact the [Research Computing Group at Saint Louis University](https://github.com/CenterForDigitalHumanities) via an E-mail to research.computing@slu.edu for more information and assistance with this step of the installation process.
