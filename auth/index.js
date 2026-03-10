@@ -1,35 +1,87 @@
 import { auth } from 'express-oauth2-jwt-bearer'
 import config from '../config/index.js'
 
+/**
+ * Parse and decode the JWT payload from the Authorization header.
+ * @param {Object} req - Express request object
+ * @returns {Object} decoded JWT payload
+ */
+const parseAuthHeaderPayload = (req) => {
+    const token = req.header('authorization').split(' ')[1]
+    const payload = token.split('.')[1]
+    return JSON.parse(Buffer.from(payload, 'base64').toString())
+}
+
+/**
+ * Request a token object from Auth0 using the provided form payload.
+ * @param {Object} form - Auth0 token request payload
+ * @returns {Object} token response object or error object
+ */
+const requestTokenFromAuth0 = async (form) => {
+    return await fetch('https://cubap.auth0.com/oauth/token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(form)
+    })
+        .then(resp => resp.json())
+        .catch(err => {
+            console.error(err)
+            return { error: true, error_description: err }
+        })
+}
+
+/**
+ * Handles invalid token errors from express-oauth2-jwt-bearer.
+ * If the error is not an invalid_token, passes it to next.
+ * Otherwise, checks if the user is a bot; if so, allows the request.
+ * If not, passes the error to next.
+ * @param {Error} err - The error from the auth middleware.
+ * @param {Object} req - The request object.
+ * @param {Object} res - Unused response object.
+ * @param {Function} next - The next middleware function.
+ */
 const _tokenError = function (err, req, res, next) {
-    if(!err.code || err.code !== "invalid_token"){ 
+    if (!err.code || err.code !== 'invalid_token') {
         next(err)
         return
     }
-    try{
-        let user = JSON.parse(Buffer.from(req.header("authorization").split(" ")[1].split('.')[1], 'base64').toString())
-        if(isBot(user)){
-            console.log("Request allowed via bot check")
+
+    try {
+        const user = parseAuthHeaderPayload(req)
+        if (isBot(user)) {
+            console.log('Request allowed via bot check')
             next()
             return
         }
     }
-    catch(e){
-        e.message = e.statusMessage = `This token did not contain a known RERUM agent.`
+    catch (e) {
+        e.message = e.statusMessage = 'This token did not contain a known RERUM agent.'
         e.status = 401
         e.statusCode = 401
         next(e)
+        return
     }
+
     next(err)
 }
 
+/**
+ * Extracts the user object from the JWT in the Authorization header.
+ * Parses the JWT payload and sets req.user.
+ * If parsing fails, passes an error to next.
+ * @param {Object} req - The request object.
+ * @param {Object} res - Unused response object.
+ * @param {Function} next - The next middleware function.
+ */
 const _extractUser = (req, res, next) => {
-    try{
-        req.user = JSON.parse(Buffer.from(req.header("authorization").split(" ")[1].split('.')[1], 'base64').toString())
+    try {
+        req.user = parseAuthHeaderPayload(req)
         next()
     }
-    catch(e){
-        e.message = e.statusMessage = `This token did not contain a known RERUM agent.}`
+    catch (e) {
+        e.message = e.statusMessage = 'This token did not contain a known RERUM agent.'
         e.status = 401
         e.statusCode = 401
         next(e)
@@ -37,7 +89,7 @@ const _extractUser = (req, res, next) => {
 }
 
 /**
- * Use like: 
+ * Use like:
  * app.get('/api/private', checkJwt, function(req, res) {
  *   // do authorized things
  * });
@@ -51,7 +103,8 @@ const checkJwt = [READONLY, auth(), _tokenError, _extractUser]
  * @param {ExpressResponse} res to return the new token.
  */
 const generateNewAccessToken = async (req, res, next) => {
-    console.log("RERUM v1 is generating a proxy access token.")
+    console.log('RERUM v1 is generating a proxy access token.')
+
     const form = {
         grant_type: 'refresh_token',
         client_id: config.CLIENT_ID,
@@ -59,36 +112,22 @@ const generateNewAccessToken = async (req, res, next) => {
         refresh_token: req.body.refresh_token,
         redirect_uri: config.RERUM_PREFIX
     }
-    try{
-        // Successful responses from auth 0 look like {"refresh_token":"BLAHBLAH", "access_token":"BLAHBLAH"}
-        // Error responses come back as successful, but they look like {"error":"blahblah", "error_description": "this is why"}
-        const tokenObj = await fetch('https://cubap.auth0.com/oauth/token',
-        {
-            method: 'POST',
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body:JSON.stringify(form)
-        })
-        .then(resp => resp.json())
-        .catch(err => {
-            // Mock Auth0 error object
-            console.error(err)
-            return {"error": true, "error_description":err}
-        })
-        // Here we need to check if this is an Auth0 success object or an Auth0 error object
-        if(tokenObj.error){
+
+    try {
+        const tokenObj = await requestTokenFromAuth0(form)
+
+        if (tokenObj.error) {
             console.error(tokenObj.error_description)
             res.status(500).send(tokenObj.error_description)
         }
-        else{
-            res.status(200).send(tokenObj) 
+        else {
+            res.status(200).send(tokenObj)
         }
     }
     catch (e) {
         console.error(e.response ? e.response.body : e.message ? e.message : e)
         res.status(500).send(e)
-     }
+    }
 }
 
 /**
@@ -97,7 +136,8 @@ const generateNewAccessToken = async (req, res, next) => {
  * @param {ExpressResponse} res to return the new token.
  */
 const generateNewRefreshToken = async (req, res, next) => {
-    console.log("RERUM v1 is generating a new refresh token.")
+    console.log('RERUM v1 is generating a new refresh token.')
+
     const form = {
         grant_type: 'authorization_code',
         client_id: config.CLIENT_ID,
@@ -105,36 +145,22 @@ const generateNewRefreshToken = async (req, res, next) => {
         code: req.body.authorization_code,
         redirect_uri: config.RERUM_PREFIX
     }
+
     try {
-        // Successful responses from auth 0 look like {"refresh_token":"BLAHBLAH", "access_token":"BLAHBLAH"}
-        // Error responses come back as successful, but they look like {"error":"blahblah", "error_description": "this is why"}
-        const tokenObj = await fetch('https://cubap.auth0.com/oauth/token',
-        {
-            method: 'POST',
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body:JSON.stringify(form)
-        })
-        .then(resp => resp.json())
-        .catch(err => {
-            // Mock Auth0 error object
-            console.error(err)
-            return {"error": true, "error_description":err}
-        })
-        // Here we need to check if this is an Auth0 success object or an Auth0 error object
-        if(tokenObj.error){
+        const tokenObj = await requestTokenFromAuth0(form)
+
+        if (tokenObj.error) {
             console.error(tokenObj.error_description)
             res.status(500).send(tokenObj.error_description)
         }
-        else{
-            res.status(200).send(tokenObj) 
+        else {
+            res.status(200).send(tokenObj)
         }
-     } 
-     catch (e) {
+    }
+    catch (e) {
         console.error(e.response ? e.response.body : e.message ? e.message : e)
         res.status(500).send(e)
-     }
+    }
 }
 
 /**
@@ -146,16 +172,16 @@ const generateNewRefreshToken = async (req, res, next) => {
 const verifyAccess = (secret) => {
     return jwt({
         secret,
-        audience: `http://rerum.io/api`,
-        issuer: `https://rerum.io/`,
+        audience: 'http://rerum.io/api',
+        issuer: 'https://rerum.io/',
         algorithms: ['RS256']
     })
 }
 
 /**
- * 
+ *
  * @param {Object} obj RERUM database entry
- * @param {Object} User object discerned from token
+ * @param {Object} userObj User object discerned from token
  * @returns Boolean match between encoded Generator Agent and obj generator
  */
 const isGenerator = (obj, userObj) => {
@@ -163,9 +189,9 @@ const isGenerator = (obj, userObj) => {
 }
 
 /**
- * Even expired tokens may be accepted if the Agent is a known bot. This is a 
+ * Even expired tokens may be accepted if the Agent is a known bot. This is a
  * dangerous thing to include, but may be a useful convenience.
- * @param {Object} User object discerned from token
+ * @param {Object} userObj User object discerned from token
  * @returns Boolean for matching ID.
  */
 const isBot = (userObj) => {
@@ -173,12 +199,12 @@ const isBot = (userObj) => {
 }
 
 function READONLY(req, res, next) {
-    if(config.READONLY=="true"){
-        res.status(503).json({"message":"RERUM v1 is read only at this time.  We apologize for the inconvenience.  Try again later."})
+    if (config.READONLY === 'true') {
+        res.status(503).json({ message: 'RERUM v1 is read only at this time.  We apologize for the inconvenience.  Try again later.' })
         return
-     }
-     next()
-     return
+    }
+
+    next()
 }
 
 export default {
