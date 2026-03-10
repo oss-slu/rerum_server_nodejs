@@ -131,17 +131,17 @@ const bulkUpdate = async function (req, res, next) {
         return next(createExpressError(err))
     }
 
-
+    let encountered = []
     const gatekeep = documents.filter(d => {
-    if (!isValidJsonObject(d)) return true
+        if (!isValidJsonObject(d)) return true
         const idcheck = _contextid(d["@context"]) ? (d.id ?? d["@id"]) : d["@id"]
-        if (idcheck) return true
+        if (!idcheck) return true   // Reject items WITHOUT an id (updates need an id)
         return false
     })
     // The empty {}s will cause this error
     if (gatekeep.length > 0) {
         return next(createExpressError({
-            message: "All objects in the body of a `/bulkCreate` must be JSON and must not contain a declared identifier property.",
+            message: "All objects in the body of a `/bulkUpdate` must be JSON and must contain a declared identifier property.",
             status: 400
         }))
     }
