@@ -26,6 +26,9 @@ const config = {
   BOT_AGENT: process.env.BOT_AGENT ?? '',
   AUDIENCE: process.env.AUDIENCE ?? '',
   ISSUER_BASE_URL: process.env.ISSUER_BASE_URL ?? '',
+  ACCESS_TOKEN: process.env.ACCESS_TOKEN ?? '',
+  REFRESH_TOKEN: process.env.REFRESH_TOKEN ?? '',
+  RERUM_ACCESS_TOKEN_URL: process.env.RERUM_ACCESS_TOKEN_URL ?? '',
   BOT_TOKEN: process.env.BOT_TOKEN ?? '',
   PORT: parseInt(process.env.PORT ?? process.env.PORT_NUMBER ?? 3001, 10)
 }
