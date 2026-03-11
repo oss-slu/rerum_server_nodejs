@@ -1,5 +1,4 @@
 import { jest } from "@jest/globals"
-// dotenv.config() is no longer needed; config module handles environment loading
 // Only real way to test an express route is to mount it and call it so that we can use the req, res, next.
 import express from "express"
 import request from "supertest"

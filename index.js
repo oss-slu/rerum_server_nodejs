@@ -57,9 +57,11 @@ export function start(port) {
       case 'EACCES':
         console.error(`Port ${p} requires elevated privileges`)
         process.exit(1)
+        break
       case 'EADDRINUSE':
         console.error(`Port ${p} is already in use`)
         process.exit(1)
+        break
       default:
         throw error
     }
