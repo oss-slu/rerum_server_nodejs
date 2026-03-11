@@ -32,7 +32,7 @@ functions are exported – everything else lives in internal modules and is inte
 kept private.  Example:
 
 ```js
-import { app, createServer, start } from 'rerum_server'
+import { app, createServer, start } from 'rerum_server_nodejs'
 
 // `app` is the configured Express application; you can pass it to Supertest or reuse it
 // inside another HTTP stack.
