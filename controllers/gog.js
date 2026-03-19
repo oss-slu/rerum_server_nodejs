@@ -6,9 +6,36 @@
  * @author Claude Sonnet 4, cubap, thehabes
  */
 
-import { newID, isValidID, db } from '../database/client.js'
+import { db } from '../database/client.js'
 import utils from '../utils.js'
 import { _contextid, ObjectID, createExpressError, getAgentClaim, parseDocumentID, idNegotiation } from './utils.js'
+
+const GOG_PRODUCTION_AGENT_ID = '61043ad4ffce846a83e700dd'
+const JSON_CONTENT_TYPE = 'application/json; charset=utf-8'
+const DEFAULT_LIMIT = 50
+const DEFAULT_SKIP = 0
+
+// Set the standard JSON response content type.
+function setJsonResponseType(res) {
+    res.set('Content-Type', JSON_CONTENT_TYPE)
+}
+
+/**
+ * Execute an aggregation pipeline and preserve the existing error handling pattern.
+ *
+ * @param {Array<object>} pipeline
+ * @returns {Promise<Array<object>>}
+ */
+async function runAggregation(pipeline) {
+    return await db.aggregate(pipeline).toArray()
+        .then((results) => {
+            if (results instanceof Error) {
+                throw results
+            }
+            return results
+        })
+}
+
 
 /**
  * THIS IS SPECIFICALLY FOR 'Gallery of Glosses'
@@ -22,15 +49,15 @@ import { _contextid, ObjectID, createExpressError, getAgentClaim, parseDocumentI
  * @return The set of {'@id':'123', '@type':'WitnessFragment'} objects that match this criteria, as an Array
  * */
 const _gog_fragments_from_manuscript = async function (req, res, next) {
-    res.set("Content-Type", "application/json; charset=utf-8")
+    setJsonResponseType(res)
     const agent = getAgentClaim(req, next)
     const agentID = agent.split("/").pop()
     const manID = req.body["ManuscriptWitness"]
-    const limit = parseInt(req.query.limit ?? 50)
-    const skip = parseInt(req.query.skip ?? 0)
+    const limit = parseInt(req.query.limit ?? DEFAULT_LIMIT)
+    const skip = parseInt(req.query.skip ?? DEFAULT_SKIP)
     let err = { message: `` }
     // This request can only be made my Gallery of Glosses production apps.
-    if (agentID !== "61043ad4ffce846a83e700dd") {
+    if (agentID !== GOG_PRODUCTION_AGENT_ID) {
         err = Object.assign(err, {
             message: `Only the Gallery of Glosses can make this request.`,
             status: 403
@@ -119,13 +146,7 @@ const _gog_fragments_from_manuscript = async function (req, res, next) {
 
         // console.log("Start GoG WitnessFragment Aggregator")
         const start = Date.now()
-        let witnessFragments = await db.aggregate(witnessFragmentPipeline).toArray()
-        .then((fragments) => {
-            if (fragments instanceof Error) {
-              throw fragments
-            }
-            return fragments
-        })
+        let witnessFragments = await runAggregation(witnessFragmentPipeline)
         const fragmentSet = new Set(witnessFragments)
         witnessFragments = Array.from(fragmentSet.values())
         // Note that a server side expand() is available and could be used to expand these fragments here.
@@ -154,15 +175,15 @@ const _gog_fragments_from_manuscript = async function (req, res, next) {
  * @return The set of {'@id':'123', '@type':'Gloss'} objects that match this criteria, as an Array
  * */
 const _gog_glosses_from_manuscript = async function (req, res, next) {
-    res.set("Content-Type", "application/json; charset=utf-8")
+    setJsonResponseType(res)
     const agent = getAgentClaim(req, next)
     const agentID = agent.split("/").pop()
     const manID = req.body["ManuscriptWitness"]
-    const limit = parseInt(req.query.limit ?? 50)
-    const skip = parseInt(req.query.skip ?? 0)
+    const limit = parseInt(req.query.limit ?? DEFAULT_LIMIT)
+    const skip = parseInt(req.query.skip ?? DEFAULT_SKIP)
     let err = { message: `` }
     // This request can only be made my Gallery of Glosses production apps.
-    if (!agentID === "61043ad4ffce846a83e700dd") {
+    if (!agentID === GOG_PRODUCTION_AGENT_ID) {
         err = Object.assign(err, {
             message: `Only the Gallery of Glosses can make this request.`,
             status: 403
@@ -281,13 +302,7 @@ const _gog_glosses_from_manuscript = async function (req, res, next) {
 
         // console.log("Start GoG Gloss Aggregator")
         // const start = Date.now()
-        let glosses = await db.aggregate(glossPipeline).toArray()
-        .then((fragments) => {
-            if (fragments instanceof Error) {
-              throw fragments
-            }
-            return fragments
-          })
+        let glosses = await runAggregation(glossPipeline)
         const glossSet = new Set(glosses)
         glosses = Array.from(glossSet.values())
         // Note that a server side expand() is available and could be used to expand these fragments here.
