@@ -37,5 +37,5 @@ it("'/unset' route functions", async () => {
     expect(response.headers["etag"]).toBeTruthy()
     expect(response.headers["allow"]).toBeTruthy()
     expect(response.headers["link"]).toBeTruthy()
-}, 20000)
+})
 

@@ -10,15 +10,19 @@
 import config from '../config/index.js'
 import fs from 'node:fs/promises'
 
-const sourcePath = '.env'
+// Path to .env file (configurable for environments like Docker)
+const sourcePath = process.env.ENV_FILE_PATH ?? '.env'
 
 // Checks if a JWT token is expired based on its 'exp' claim.
 const isTokenExpired = (token) => {
   if (!token) return true
 
   try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return true
+
     const payload = JSON.parse(
-      Buffer.from(token.split('.')[1], 'base64').toString()
+      Buffer.from(parts[1], 'base64').toString()
     )
 
     return !payload.exp || Date.now() >= payload.exp * 1000
