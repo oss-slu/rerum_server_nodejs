@@ -44,8 +44,28 @@ server.listen()
 start(8080) // convenience helper that both creates and listens
 ```
 
-Consumers no longer need to reach into `./app.js` or other deep paths – if it isn't
-exported here it isn't part of the stable API.
+#### Advanced usage with configuration options
+For npm package usage, you can configure environment variables programmatically:
+
+```js
+import { createRerumApp, createServerAsync, startAsync } from 'rerum_server'
+
+// Create a custom configured app
+const app = await createRerumApp({
+  mongoConnectionString: 'mongodb://localhost:27017',
+  mongoDbName: 'myapp',
+  port: 3005,
+  // ... other environment variable overrides
+})
+
+// Create and start server with custom config
+const server = await startAsync({
+  mongoConnectionString: 'mongodb://localhost:27017',
+  port: 3005
+})
+```
+
+**Note:** The legacy `createServer(port)` and `start(port)` functions return `http.Server` instances directly for backward compatibility. The new async functions (`createRerumApp`, `createServerAsync`, `startAsync`) support configuration options but return Promises.
 
 ## What we add
 You will find a `__rerum` property on anything you read from this repository. This is written onto
