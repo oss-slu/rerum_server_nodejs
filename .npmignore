@@ -3,6 +3,7 @@ docs/
 *.md
 !README.md
 CODEOWNERS
+!LICENSE
 
 # Test and mock files
 __tests__/
@@ -19,12 +20,34 @@ backups/
 *.swp
 *.tgz
 
+# editor / OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
 # Local configuration files
 .env
 .env.*
+!.env.example
 config.local.js
 *.local.js
 
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# local scripts / temp files
+tmp/
+temp/
+
 # Tooling and CI
+.git/
 .github/
 .claude/
+
+# dependency folders
+node_modules/
+

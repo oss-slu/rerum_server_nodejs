@@ -2,7 +2,6 @@
   "name": "rerum_server_nodejs",
   "type": "module",
   "version": "0.0.0",
-  "main": "./app.js",
   "description": "Rerum API server for database access.",
   "keywords": [
     "rerum",
@@ -30,10 +29,25 @@
     "npm": ">=11.7.0"
   },
   "main": "index.js",
+    "files": [
+    "app.js",
+    "index.js",
+    "bin/",
+    "auth/",
+    "config/",
+    "controllers/",
+    "database/",
+    "public/",
+    "routes/",
+    "README.md"
+  ],
   "scripts": {
     "start": "node ./bin/rerum_v1.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "runtest": "npm test"
+    "runtest": "npm test",
+    "pack:check": "npm pack --dry-run",
+    "publish:dry-run": "npm publish --dry-run",
+    "prepublishOnly": "npm test && npm pack --dry-run"
   },
   "dependencies": {
     "cookie-parser": "~1.4.7",
