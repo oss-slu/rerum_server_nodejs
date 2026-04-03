@@ -54,13 +54,14 @@ const bulkCreate = async function (req, res, next) {
     }
     
     const gatekeep = documents.filter(d=> {
-        // Each item must be valid JSON, but can't be an array.
-        if (!isValidJsonObject(d)) return d
+    // Each item must be valid JSON, but can't be an array.
+        if (!isValidJsonObject(d)) return true
 
         // Items must not have an @id, and in some cases same for id.
         const idcheck = _contextid(d["@context"]) ? (d.id ?? d["@id"]) : d["@id"]
-        if(idcheck) return d
-    }) 
+        if(idcheck) return true    // Reject items WITH an id (creates must not have one)
+        return false
+    })
     if (gatekeep.length > 0) {
         return next(createExpressError({
             message: "All objects in the body of a `/bulkCreate` must be JSON and must not contain a declared identifier property.",
@@ -98,7 +99,6 @@ const bulkCreate = async function (req, res, next) {
     }
     try {
         let dbResponse = await db.bulkWrite(bulkOps, {'ordered':false})
-        res.set("Content-Type", "application/json; charset=utf-8")
         res.set("Link",dbResponse.result.insertedIds.map(r => `${config.RERUM_ID_PREFIX}${r._id}`)) // https://www.rfc-editor.org/rfc/rfc5988
         res.status(201)
         const estimatedResults = bulkOps.map(f=>{
@@ -190,7 +190,6 @@ const bulkUpdate = async function (req, res, next) {
     }
     try {
         let dbResponse = await db.bulkWrite(bulkOps, {'ordered':false})
-        res.set("Content-Type", "application/json; charset=utf-8")
         res.set("Link", dbResponse.result.insertedIds.map(r => `${config.RERUM_ID_PREFIX}${r._id}`)) // https://www.rfc-editor.org/rfc/rfc5988
         res.status(200)
         const estimatedResults = bulkOps.filter(f=>f.insertOne).map(f=>{
