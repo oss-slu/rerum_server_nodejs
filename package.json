@@ -24,8 +24,8 @@
   "license": "MIT",
   "author": "Research Computing Group <research.computing@slu.edu> (https://slu.edu)",
   "repository": {
-      "type": "git",
-      "url": "git+https://github.com/CenterForDigitalHumanities/rerum_server_nodejs.git"
+    "type": "git",
+    "url": "git+https://github.com/CenterForDigitalHumanities/rerum_server_nodejs.git"
   },
   "bugs": {
     "url": "https://github.com/CenterForDigitalHumanities/rerum_server_nodejs/issues"
@@ -46,6 +46,7 @@
     "dotenv": "~17.2.3",
     "express": "^5.2.1",
     "express-oauth2-jwt-bearer": "~1.7.1",
+    "express-rate-limit": "^8.3.2",
     "express-urlrewrite": "~2.0.3",
     "mongodb": "^7.0.0",
     "morgan": "~1.10.1"
