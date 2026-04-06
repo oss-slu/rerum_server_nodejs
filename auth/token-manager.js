@@ -10,18 +10,24 @@
 import config from '../config/index.js'
 import fs from 'node:fs/promises'
 
-const sourcePath = '.env'
+const sourcePath = process.env.ENV_FILE_PATH ?? '.env'
+let refreshInFlight = null
 
 // Checks if a JWT token is expired based on its 'exp' claim.
 const isTokenExpired = (token) => {
   if (!token) return true
 
   try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return true
+
     const payload = JSON.parse(
       Buffer.from(token.split('.')[1], 'base64').toString()
     )
 
-    return !payload.exp || Date.now() >= payload.exp * 1000
+    const SKEW_MS = 30 * 1000 // 30 seconds
+
+    return !payload.exp || Date.now() >= (payload.exp * 1000 - SKEW_MS)
   } catch (err) {
     console.error('Failed to parse token:', err)
     return true
@@ -57,7 +63,13 @@ async function generateNewAccessToken() {
     body: JSON.stringify({ refresh_token: refreshToken })
   })
 
-  const tokenObject = await response.json()
+  let tokenObject
+
+  try {
+    tokenObject = await response.json()
+  } catch (err) {
+    throw new Error(`Failed to parse token response (status ${response.status})`)
+  }
 
   // Handle HTTP or API errors
   if (!response.ok) {
@@ -68,6 +80,9 @@ async function generateNewAccessToken() {
     )
   }
 
+  //NOTE: We intentionally update process.env at runtime so the latest access token
+  // is available across the application. Callers should prefer using
+  // getValidAccessToken() instead of reading process.env directly.
   process.env.ACCESS_TOKEN = tokenObject.access_token
 
   // Auth0 may return a new refresh token depending on configuration
@@ -109,13 +124,26 @@ async function checkAndRefreshAccessToken() {
   const refreshToken = config.REFRESH_TOKEN || process.env.REFRESH_TOKEN
 
   if (!accessToken && refreshToken) {
-    await generateNewAccessToken()
+    if (!refreshInFlight) {
+      refreshInFlight = generateNewAccessToken().finally(() => {
+        refreshInFlight = null
+      })
+    }
+
+    await refreshInFlight
     return
   }
 
   if (accessToken && isTokenExpired(accessToken)) {
     console.log('Access token expired. Refreshing...')
-    await generateNewAccessToken()
+
+    if (!refreshInFlight) {
+      refreshInFlight = generateNewAccessToken().finally(() => {
+        refreshInFlight = null
+      })
+    }
+
+    await refreshInFlight
   }
 }
 
