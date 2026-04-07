@@ -12,6 +12,7 @@ import clientRouter from './routes/client.js'
 import _gog_fragmentsRouter from './routes/_gog_fragments_from_manuscript.js';
 import _gog_glossesRouter from './routes/_gog_glosses_from_manuscript.js';
 import rest from './rest.js'
+import csrf from 'lusca'
 import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -60,7 +61,7 @@ app.use(express.json())
 app.use(express.text())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
-
+app.use(csrf())
 //Publicly available scripts, CSS, and HTML pages.
 app.use(express.static(path.join(__dirname, 'public')))
 
