@@ -28,7 +28,7 @@ routeTester.use(express.json())
 routeTester.use(express.urlencoded({ extended: false }))
 
 // Mount our own /set route without auth that will use controller.patchSet
-routeTester.use("/set", [limiter, addAuth, controller.patchSet])
+routeTester.use("/set", limiter, addAuth, controller.patchSet)
 const unique = new Date(Date.now()).toISOString().replace("Z", "")
 
 it("'/set' route functions", async () => {
