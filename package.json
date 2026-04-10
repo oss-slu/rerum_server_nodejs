@@ -37,6 +37,9 @@
   "files": [
     "app.js",
     "index.js",
+    "utils.js",
+    "rest.js",
+    "db-controller.js",
     "bin/",
     "auth/",
     "config/",
@@ -44,7 +47,9 @@
     "database/",
     "public/",
     "routes/",
-    "README.md"
+    "README.md",
+    "!**/__tests__/",
+    "!**/__mocks__/"
   ],
   "scripts": {
     "start": "node ./bin/rerum_v1.js",

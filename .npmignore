@@ -1,53 +1,48 @@
-# Documentation
-docs/
-*.md
-!README.md
-CODEOWNERS
-!LICENSE
-
-# Test and mock files
-__tests__/
+# Development and testing files
+/__tests__/
 __mocks__/
-**/__tests__/
-**/__mocks__/
-coverage/
+*.test.js
 jest.config.js
+.jest/
 
-# Backup folders / artifacts
-backups/
-*.backup
-*.bak
-*.swp
-*.tgz
+# Development and CI/CD
+.github/
+.git/
+.gitignore
 
-# editor / OS files
+# Environment and secrets
+.env
+.env.example
+.env.*.local
+
+# Development dependencies and cache
+node_modules/
+.npm/
+npm-debug.log*
+yarn-error.log*
+package-lock.json
+
+# IDE and editor files
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 .DS_Store
-Thumbs.db
+.editorconfig
 
-# Local configuration files
-.env
-.env.*
-!.env.example
-config.local.js
-*.local.js
-
-# logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# local scripts / temp files
-tmp/
-temp/
-
-# Tooling and CI
-.git/
-.github/
+# Project documentation and guides
 .claude/
+.github/
+CONTRIBUTING.md
+DEVELOPMENT.md
 
-# dependency folders
-node_modules/
+# Build and package files
+.next/
+dist/
+build/
+.cache/
 
+# Temporary files
+*.tmp
+.temp/
