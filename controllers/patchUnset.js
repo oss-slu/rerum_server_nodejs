@@ -84,16 +84,35 @@ const patchUnset = async function (req, res, next) {
                 res.json(originalObject)
                 return
             }
+            const id = ObjectID()
+            let context = patchedObject["@context"] ? { "@context": patchedObject["@context"] } : {}
+            let rerumProp = { "__rerum": configureRerumOptions(generatorAgent, originalObject, true, false)["__rerum"] }
+            delete patchedObject["__rerum"]
+            delete patchedObject["_id"]
+            delete patchedObject["@id"]
+            // id is also protected in this case, so it can't be set.
+            if(_contextid(patchedObject["@context"])) delete patchedObject.id
+            delete patchedObject["@context"]
+            let newObject = Object.assign(context, { "@id": config.RERUM_ID_PREFIX + id }, patchedObject, rerumProp, { "_id": id })
             console.log("PATCH UNSET")
             try {
-                const success = await respondToPatchSuccess(req, res, generatorAgent, originalObject, patchedObject)
-                if (!success) {
-                    err = Object.assign(err, {
-                        message: `Unable to alter the history next of the originating object.  The history tree may be broken. See ${originalObject["@id"]}. ${err.message}`,
-                        status: 500
-                    })
+                let result = await db.insertOne(newObject)
+                if (alterHistoryNext(originalObject, newObject["@id"])) {
+                    //Success, the original object has been updated.
+                    res.set(configureWebAnnoHeadersFor(newObject))
+                    newObject = idNegotiation(newObject)
+                    newObject.new_obj_state = JSON.parse(JSON.stringify(newObject))
+                    res.location(newObject[_contextid(newObject["@context"]) ? "id":"@id"])
+                    res.status(200)
+                    res.json(newObject)
+                    return
                 }
-            } catch (error) {
+                err = Object.assign(err, {
+                    message: `Unable to alter the history next of the originating object.  The history tree may be broken. See ${originalObject["@id"]}. ${err.message}`,
+                    status: 500
+                })
+            }
+            catch (error) {
                 //WriteError or WriteConcernError
                 next(createExpressError(error))
                 return
@@ -108,38 +127,6 @@ const patchUnset = async function (req, res, next) {
         })
     }
     next(createExpressError(err))
-}
-
-/**
- * Helper function - responds after a patch operation succeeds
- * Handles creating the new versioned object and updating history
- */
-const respondToPatchSuccess = async (req, res, generatorAgent, originalObject, patchedObject) => {
-    const id = ObjectID()
-    let context = patchedObject["@context"] ? { "@context": patchedObject["@context"] } : {}
-    let rerumProp = { "__rerum": configureRerumOptions(generatorAgent, originalObject, true, false)["__rerum"] }
-    delete patchedObject["__rerum"]
-    delete patchedObject["_id"]
-    delete patchedObject["@id"]
-    if(_contextid(patchedObject["@context"])) delete patchedObject.id
-    delete patchedObject["@context"]
-    let newObject = Object.assign(context, { "@id": config.RERUM_ID_PREFIX + id }, patchedObject, rerumProp, { "_id": id })
-    
-    try {
-        await db.insertOne(newObject)
-        if (alterHistoryNext(originalObject, newObject["@id"])) {
-            res.set(configureWebAnnoHeadersFor(newObject))
-            newObject = idNegotiation(newObject)
-            newObject.new_obj_state = JSON.parse(JSON.stringify(newObject))
-            res.location(newObject[_contextid(newObject["@context"]) ? "id":"@id"])
-            res.status(200)
-            res.json(newObject)
-            return true
-        }
-        return false
-    } catch (error) {
-        throw error
-    }
 }
 
 export { patchUnset }
