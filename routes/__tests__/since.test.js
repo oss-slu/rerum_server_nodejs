@@ -3,14 +3,22 @@ import { jest } from "@jest/globals"
 // Only real way to test an express route is to mount it and call it so that we can use the req, res, next.
 import express from "express"
 import request from "supertest"
+import rateLimit from "express-rate-limit"
 import controller from '../../db-controller.js'
 
 const routeTester = new express()
 routeTester.use(express.json())
 routeTester.use(express.urlencoded({ extended: false }))
 
-// Mount our own /create route without auth that will use controller.history
-routeTester.use("/since/:_id", controller.since)
+const sinceLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false
+})
+
+// Mount our own /since route without auth that will use controller.since
+routeTester.get("/since/:_id", sinceLimiter, controller.since)
 
 it("'/since/:id' route functions", async () => {
   const response = await request(routeTester)
@@ -18,6 +26,7 @@ it("'/since/:id' route functions", async () => {
     .set("Content-Type", "application/json")
     .then(resp => resp)
     .catch(err => err)
+
   expect(response.statusCode).toBe(200)
   expect(response.headers["content-length"]).toBeTruthy()
   expect(response.headers["content-type"]).toBeTruthy()
