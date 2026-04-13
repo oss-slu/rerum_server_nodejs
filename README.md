@@ -27,12 +27,12 @@ Stores important bits of knowledge in structured JSON-LD objects:
 1. **Attributed and Versioned**—always include asserted ownership and transaction metadata so consumers can evaluate trustworthiness and relevance.
 
 ### Programmatic usage
-This project exposes a single public entry point at the package root (`index.js`).  Only a few
+This project exposes a single public entry point at the package root (`index.js`). Only a few
 functions are exported – everything else lives in internal modules and is intentionally
-kept private.  Example:
+kept private. Example:
 
 ```js
-import { app, createServer, start } from 'rerum_server'
+import { app, createServer, start } from 'rerum_server_nodejs'
 
 // `app` is the configured Express application; you can pass it to Supertest or reuse it
 // inside another HTTP stack.
@@ -44,8 +44,29 @@ server.listen()
 start(8080) // convenience helper that both creates and listens
 ```
 
-Consumers no longer need to reach into `./app.js` or other deep paths – if it isn't
-exported here it isn't part of the stable API.
+#### Advanced usage with configuration options
+For npm package usage, you can configure environment variables programmatically:
+
+```js
+import { createRerumApp, createServerAsync, startAsync } from 'rerum_server_nodejs'
+
+// Create a custom configured app
+const app = await createRerumApp({
+  mongoConnectionString: 'mongodb://localhost:27017',
+  mongoDbName: 'myapp',
+  mongoCollection: 'objects',
+  port: 3005,
+  // ... other environment variable overrides
+})
+
+// Create and start server with custom config
+const server = await startAsync({
+  mongoConnectionString: 'mongodb://localhost:27017',
+  port: 3005
+})
+```
+
+**Note:** The legacy `createServer(port)` and `start(port)` functions return `http.Server` instances directly for backward compatibility. The newer async functions (`createRerumApp`, `createServerAsync`, `startAsync`) support full configuration overrides and return Promises.
 
 ## What we add
 You will find a `__rerum` property on anything you read from this repository. This is written onto
@@ -82,48 +103,87 @@ npm install
 ```
 
 #### Create the Configuration File
-Create a file named `.env` in the root folder.  In the above example, the root is `/code_folder/rerum_api`.  `/code_folder/rerum_api/.env` looks like this:
+Create a file named `.env` in the root folder. In the above example, the root is `/code_folder/rerum_api`. The file should use standard env formatting without extra spaces around the equals sign, for example:
 
 ```shell
-RERUM_API_VERSION = 1.1.0
-RERUM_BASE = URL_OF_YOUR_DEPLOYMENT
-RERUM_PREFIX = URL_OF_YOUR_DEPLOYMENT/v1/
-RERUM_ID_PREFIX = URL_OF_YOUR_DEPLOYMENT/v1/id/
-RERUM_AGENT_CLAIM = URL_OF_YOUR_DEPLOYMENT/agent
-RERUM_CONTEXT = URL_OF_YOUR_DEPLOYMENT/v1/context.json
-RERUM_API_DOC = URL_OF_YOUR_DEPLOYMENT/v1/API.html
-MONGO_CONNECTION_STRING = OBTAINED_FROM_MONGODB_SET_UP
-MONGODBNAME = OBTAINED_FROM_MONGODB_SET_UP
-MONGODBCOLLECTION = OBTAINED_FROM_MONGODB_SET_UP
-DOWN = false
-READONLY = false
+RERUM_API_VERSION=1.1.0
+RERUM_BASE=http://localhost:3005
+RERUM_PREFIX=http://localhost:3005/v1/
+RERUM_ID_PREFIX=http://localhost:3005/v1/id/
+RERUM_AGENT_CLAIM=http://localhost:3005/agent
+RERUM_CONTEXT=http://localhost:3005/v1/context.json
+RERUM_API_DOC=http://localhost:3005/v1/API.html
+MONGO_CONNECTION_STRING=mongodb://localhost:27017/test
+MONGODBNAME=test_rerum
+MONGODBCOLLECTION=test_collection
+DOWN=false
+READONLY=false
+PORT=3005
+CLIENTID=test_client_id
+RERUMSECRET=test_secret
+BOT_TOKEN=test_bot_token
+BOT_AGENT=test_bot_agent
+AUDIENCE=test_audience
+ISSUER_BASE_URL=https://test.auth0.com/
 ```
 
 #### Set Up Auth0 Authorization
 Please contact the [Research Computing Group at Saint Louis University](https://github.com/CenterForDigitalHumanities) via an E-mail to research.computing@slu.edu for more information and assistance with this step of the installation process.
 
-The public RERUM uses Auth0 to authorize API calls for registered RERUM applications and to attribute data for those applications.  This elicits the functionality that if an application has not registered with RERUM it will not be able to perform write (create - update - delete) actions with the RERUM API.  It also allows queries into RERUM to query for data specific to individual applications when desired or required.  The following properties need to be added to the `.env` file for this process.
+The public RERUM uses Auth0 to authorize API calls for registered RERUM applications and to attribute data for those applications. This means write operations (create, update, delete) require a valid token, while read and static routes remain available. The following properties need to be added to the `.env` file for this process.
 
 ```shell
-AUDIENCE = OBTAINED_FROM_AUTH0_SET_UP
-ISSUER_BASE_URL = OBTAINED_FROM_AUTH0_SET_UP
-CLIENTID = OBTAINED_FROM_AUTH0_SET_UP
-RERUMSECRET = OBTAINED_FROM_AUTH0_SET_UP
-BOT_TOKEN = OBTAINED_FROM_BOT_REGISTRATION
-BOT_AGENT = OBTAINED_FROM_BOT_REGISTRATION
+AUDIENCE=OBTAINED_FROM_AUTH0_SET_UP
+ISSUER_BASE_URL=OBTAINED_FROM_AUTH0_SET_UP
+CLIENTID=OBTAINED_FROM_AUTH0_SET_UP
+RERUMSECRET=OBTAINED_FROM_AUTH0_SET_UP
+BOT_TOKEN=OBTAINED_FROM_BOT_REGISTRATION
+BOT_AGENT=OBTAINED_FROM_BOT_REGISTRATION
 ```
 
-You will notice these variables used throughout the code.  The connection to Auth0 must be active and functioning for these pieces of code or you will encounter errors in testing, building, and running.
+The code also supports alternate names for the same values when using environment variables:
+
+```shell
+CLIENT_ID=OBTAINED_FROM_AUTH0_SET_UP
+CLIENT_SECRET=OBTAINED_FROM_AUTH0_SET_UP
+```
+
+You will notice these variables used throughout the code. The connection to Auth0 must be active and functioning for write-enabled endpoints, or you may receive authorization errors during runtime.
 
 #### Run
 Now, you can run tests
 ```shell
 npm run runtest
 ```
-And start the app
+
+### Publishing
+To verify package publishing locally before publishing to npm, use:
+
+```shell
+npm run publish:dry-run
+```
+
+This command exercises npm packaging without uploading the package. It confirms that `.npmignore` is working and that sensitive files such as `.env` are not included in the published package.
+
+### Installing the package
+For local development, install from the package tarball:
+
+```shell
+npm install /path/to/rerum_server_nodejs-0.0.0.tgz
+```
+
+For a published release, install from npm:
+
+```shell
+npm install rerum_server_nodejs
+```
+
+Then start the app:
+
 ```shell
 npm start
 ```
+
 To stop the application, kill or exit the process via your shell (<kbd>CTRL + C</kbd> or <kbd>CTRL + X</kbd>).
 
 ## Who is to blame?
