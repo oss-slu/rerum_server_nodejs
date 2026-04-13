@@ -106,7 +106,7 @@ app.use(
   app.use(express.text())
   app.use(express.urlencoded({ extended: true }))
   app.use(cookieParser())
-  app.use(csrf())
+  app.use(csrf({ cookie: true }))
 
 //Publicly available scripts, CSS, and HTML pages.
 app.use(express.static(path.join(__dirname, 'public')))

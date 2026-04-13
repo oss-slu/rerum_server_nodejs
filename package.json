@@ -5,7 +5,7 @@
   "main": "index.js",
   "description": "Rerum API v1 server for storing and querying JSON-LD objects, annotations, and IIIF data.",
   "bin": {
-    "rerum_server_nodejs": "./bin/rerum_v1.js"
+    "rerum-server-nodejs": "bin/rerum_v1.js"
   },
   "keywords": [
     "rerum",
@@ -24,20 +24,22 @@
   "license": "MIT",
   "author": "Research Computing Group <research.computing@slu.edu> (https://slu.edu)",
   "repository": {
-      "type": "git",
-      "url": "git+https://github.com/CenterForDigitalHumanities/rerum_server_nodejs.git"
+    "type": "git",
+    "url": "git+https://github.com/CenterForDigitalHumanities/rerum_server_nodejs.git"
   },
   "bugs": {
     "url": "https://github.com/CenterForDigitalHumanities/rerum_server_nodejs/issues"
   },
   "engines": {
-    "node": ">=24.12.0",
-    "npm": ">=11.7.0"
+    "node": ">=22.12.0",
+    "npm": ">=11.2.0"
   },
   "scripts": {
     "start": "node ./bin/rerum_v1.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "runtest": "npm test"
+    "runtest": "npm test",
+    "pack": "npm pack",
+    "publish:dry-run": "npm publish --dry-run"
   },
   "dependencies": {
     "cookie-parser": "~1.4.7",
