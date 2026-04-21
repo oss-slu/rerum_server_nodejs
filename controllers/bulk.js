@@ -19,7 +19,6 @@ function setJsonHeaders(res) {
     res.set("Content-Type", "application/json; charset=utf-8")
 }
 
-
 //function to validate request body is a non-empty array
 function requireNonEmptyArrayBody(req) {
     const documents = req.body
@@ -31,7 +30,6 @@ function requireNonEmptyArrayBody(req) {
     }
     return documents
 }
-
 
 //check if an item is valid JSON object (not array)
 function isValidJsonObject(d) {

@@ -16,6 +16,7 @@ import config from '../config/index.js'
 
 const port = config.PORT ?? 3001
 app.set('port', port)
+
 /**
  * Create HTTP server.
  */
