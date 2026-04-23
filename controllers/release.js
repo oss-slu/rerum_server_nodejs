@@ -9,7 +9,7 @@
 import { newID, isValidID, db } from '../database/client.js'
 import { isDeleted, isReleased, isGenerator } from '../predicates.js'
 import { configureWebAnnoHeadersFor } from '../headers.js'
-import { _contextid, ObjectID, createExpressError, getAgentClaim, parseDocumentID, idNegotiation, generateSlugId, establishReleasesTree, healReleasesTree } from './utils.js'
+import { _contextid, ObjectID, createError, createExpressError, getAgentClaim, parseDocumentID, idNegotiation, generateSlugId, establishReleasesTree, healReleasesTree } from './utils.js'
 
 /**
  * Public facing servlet to release an existing RERUM object. This will not
@@ -25,7 +25,8 @@ const release = async function (req, res, next) {
     let agentRequestingRelease = getAgentClaim(req, next)
     let id = req.params["_id"]
     let slug
-    let err = {"message":""}
+    let errMessage = ""
+    let errStatus = 0
     let treeHealed = false
     if(req.get("Slug")){
         let slug_json = await generateSlugId(req.get("Slug"), next)
@@ -51,25 +52,19 @@ const release = async function (req, res, next) {
         let nextReleases = safe_original.__rerum.releases.next
         
         if (isDeleted(safe_original)) {
-            err = Object.assign(err, {
-                message: `The object you are trying to release is deleted. ${err.message}`,
-                status: 403
-            })
+            errMessage = `The object you are trying to release is deleted. ${errMessage}`
+            errStatus = 403
         }
         if (isReleased(safe_original)) {
-            err = Object.assign(err, {
-                message: `The object you are trying to release is already released. ${err.message}`,
-                status: 403
-            })
+            errMessage = `The object you are trying to release is already released. ${errMessage}`
+            errStatus = 403
         }
         if (!isGenerator(safe_original, agentRequestingRelease)) {
-            err = Object.assign(err, {
-                message: `You are not the generating agent for this object. You cannot release it. ${err.message}`,
-                status: 401
-            })
+            errMessage = `You are not the generating agent for this object. You cannot release it. ${errMessage}`
+            errStatus = 401
         }
-        if (err.status) {
-            next(createExpressError(err))
+        if (errStatus) {
+            next(createExpressError(createError(errStatus, errMessage)))
             return
         }
         console.log("RELEASE")
@@ -122,11 +117,7 @@ const release = async function (req, res, next) {
     }
     else{
         //This was a bad request
-        err = {
-            message: "You must provide the id of an object to release.  Use /release/id-here or release?_id=id-here.",
-            status: 400
-        }
-        next(createExpressError(err))
+        next(createExpressError(createError(400, "You must provide the id of an object to release.  Use /release/id-here or release?_id=id-here.")))
         return
     }
 }

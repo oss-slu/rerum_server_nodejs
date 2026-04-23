@@ -99,6 +99,10 @@ const index = function (req, res, next) {
     })
 }
 
+export function createError(status, message, details = {}) {
+    return Object.assign(new Error(message), { status, ...details })
+}
+
 function createExpressError(err) {
     let error = {}
     if (err.code) {
