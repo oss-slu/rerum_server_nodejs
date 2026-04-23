@@ -9,7 +9,7 @@
 import { newID, isValidID, db } from '../database/client.js'
 import { isDeleted, isReleased, isGenerator } from '../predicates.js'
 import { configureWebAnnoHeadersFor } from '../headers.js'
-import { _contextid, ObjectID, createExpressError, getAgentClaim, parseDocumentID, idNegotiation } from './utils.js'
+import { _contextid, ObjectID, createError, createExpressError, getAgentClaim, parseDocumentID, idNegotiation } from './utils.js'
 
 /**
  * Replace some existing object in MongoDB with the JSON object in the request body.
@@ -18,7 +18,8 @@ import { _contextid, ObjectID, createExpressError, getAgentClaim, parseDocumentI
  * Respond RESTfully
  * */
 const overwrite = async function (req, res, next) {
-    let err = { message: `` }
+    let errMessage = ""
+    let errStatus = 0
     res.set("Content-Type", "application/json; charset=utf-8")
     let objectReceived = JSON.parse(JSON.stringify(req.body))
     let agentRequestingOverwrite = getAgentClaim(req, next)
@@ -34,28 +35,20 @@ const overwrite = async function (req, res, next) {
             return
         }
         if (null === originalObject) {
-            err = Object.assign(err, {
-                message: `No object with this id could be found in RERUM. Cannot overwrite. ${err.message}`,
-                status: 404
-            })
+            errMessage = `No object with this id could be found in RERUM. Cannot overwrite. ${errMessage}`
+            errStatus = 404
         }
         else if (isDeleted(originalObject)) {
-            err = Object.assign(err, {
-                message: `The object you are trying to overwrite is deleted. ${err.message}`,
-                status: 403
-            })
+            errMessage = `The object you are trying to overwrite is deleted. ${errMessage}`
+            errStatus = 403
         }
         else if (isReleased(originalObject)) {
-            err = Object.assign(err, {
-                message: `The object you are trying to overwrite is released.  Fork with /update to make changes. ${err.message}`,
-                status: 403
-            })
+            errMessage = `The object you are trying to overwrite is released.  Fork with /update to make changes. ${errMessage}`
+            errStatus = 403
         }
         else if (!isGenerator(originalObject, agentRequestingOverwrite)) {
-            err = Object.assign(err, {
-                message: `You are not the generating agent for this object. You cannot overwrite it. Fork with /update to make changes. ${err.message}`,
-                status: 401
-            })
+            errMessage = `You are not the generating agent for this object. You cannot overwrite it. Fork with /update to make changes. ${errMessage}`
+            errStatus = 401
         }
         else {
             // Optimistic locking check - no expected version is a brutal overwrite
@@ -105,12 +98,10 @@ const overwrite = async function (req, res, next) {
     }
     else {
         //This is a custom one, the http module will not detect this as a 400 on its own
-        err = Object.assign(err, {
-            message: `Object in request body must have the property '@id' or 'id'. ${err.message}`,
-            status: 400
-        })
+        errMessage = `Object in request body must have the property '@id' or 'id'. ${errMessage}`
+        errStatus = 400
     }
-    next(createExpressError(err))
+    next(createExpressError(createError(errStatus, errMessage)))
 }
 
 export { overwrite }

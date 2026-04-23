@@ -6,7 +6,7 @@
  */
 import { db } from '../database/client.js'
 import { configureLDHeadersFor } from '../headers.js'
-import { idNegotiation, createExpressError } from './utils.js'
+import { idNegotiation, createError, createExpressError } from './utils.js'
 
 /**
  * Merges and deduplicates results from multiple MongoDB Atlas Search index queries.
@@ -265,11 +265,7 @@ const searchAsWords = async function (req, res, next) {
     let searchText = req.body?.searchText ?? req.body
     const searchOptions = req.body?.options ?? {}
     if (!searchText) {
-        let err = {
-            message: "You did not provide text to search for in the search request.",
-            status: 400
-        }
-        next(createExpressError(err))
+        next(createExpressError(createError(400, "You did not provide text to search for in the search request.")))
         return
     }
     const limit = parseInt(req.query.limit ?? 100)
@@ -353,11 +349,7 @@ const searchAsPhrase = async function (req, res, next) {
         slop: 2
     }
     if (!searchText) {
-        let err = {
-            message: "You did not provide text to search for in the search request.",
-            status: 400
-        }
-        next(createExpressError(err))
+        next(createExpressError(createError(400, "You did not provide text to search for in the search request.")))
         return
     }
     const limit = parseInt(req.query.limit ?? 100)
@@ -433,11 +425,7 @@ const searchFuzzily = async function (req, res, next) {
         }
     }
     if (!searchText) {
-        let err = {
-            message: "You did not provide text to search for in the search request.",
-            status: 400
-        }
-        next(createExpressError(err))
+        next(createExpressError(createError(400, "You did not provide text to search for in the search request.")))
         return
     }
     const limit = parseInt(req.query.limit ?? 100)
@@ -521,20 +509,12 @@ const searchWildly = async function (req, res, next) {
         allowAnalyzedField: true
     }
     if (!searchText) {
-        let err = {
-            message: "You did not provide text to search for in the search request.",
-            status: 400
-        }
-        next(createExpressError(err))
+        next(createExpressError(createError(400, "You did not provide text to search for in the search request.")))
         return
     }
     // Require wildcards in the search text
     if (!searchText.includes('*') && !searchText.includes('?')) {
-        let err = {
-            message: "Wildcards must be used in wildcard search. Use '*' to match any characters or '?' to match a single character.",
-            status: 400
-        }
-        next(createExpressError(err))
+        next(createExpressError(createError(400, "Wildcards must be used in wildcard search. Use '*' to match any characters or '?' to match a single character.")))
         return
     }
     const limit = parseInt(req.query.limit ?? 100)
@@ -625,11 +605,7 @@ const searchAlikes = async function (req, res, next) {
     let likeDocument = req.body
     // Validate that a document was provided
     if (!likeDocument || (typeof likeDocument !== 'object') || Object.keys(likeDocument).length === 0) {
-        let err = {
-            message: "You must provide a JSON document in the request body to find similar documents.",
-            status: 400
-        }
-        next(createExpressError(err))
+        next(createExpressError(createError(400, "You must provide a JSON document in the request body to find similar documents.")))
         return
     }
     const limit = parseInt(req.query.limit ?? 100)
