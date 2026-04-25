@@ -5,7 +5,7 @@ import controller from '../db-controller.js'
 import auth from '../auth/index.js'
 
 router.route('/')
-    .delete(auth.checkJwt, auth.authRateLimiter, controller.deleteObj)
+    .delete(auth.authRateLimiter, auth.checkJwt, controller.deleteObj)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for deleting, please use DELETE.'
         res.status(405)
@@ -13,7 +13,7 @@ router.route('/')
     })
 
 router.route('/:_id')
-    .delete(auth.checkJwt, auth.authRateLimiter, controller.deleteObj)
+    .delete(auth.authRateLimiter, auth.checkJwt, controller.deleteObj)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for deleting, please use DELETE.'
         res.status(405)

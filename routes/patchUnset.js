@@ -5,9 +5,11 @@ import controller from '../db-controller.js'
 import auth from '../auth/index.js'
 import rest from '../rest.js'
 
+router.use(auth.checkJwt, auth.authRateLimiter)
+
 router.route('/')
-    .patch(auth.checkJwt, auth.authRateLimiter,controller.patchUnset)
-    .post(auth.checkJwt, auth.authRateLimiter, (req, res, next) => {
+     .patch(controller.patchUnset)
+     .post((req, res, next) => {
         if (rest.checkPatchOverrideSupport(req, res)) {
             controller.patchUnset(req, res, next)
         }
