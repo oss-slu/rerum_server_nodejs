@@ -28,7 +28,7 @@ const requestTokenFromAuth0 = async (form) => {
         .then(resp => resp.json())
         .catch(err => {
             console.error(err)
-            return { error: true, error_description: err }
+            return { error: true, error_description: 'Auth0 token request failed.' }
         })
 }
 
@@ -126,7 +126,7 @@ const generateNewAccessToken = async (req, res, next) => {
     }
     catch (e) {
         console.error(e.response ? e.response.body : e.message ? e.message : e)
-        res.status(500).send(e)
+        res.status(500).json({ message: 'Unable to generate token.' })
     }
 }
 
@@ -159,7 +159,7 @@ const generateNewRefreshToken = async (req, res, next) => {
     }
     catch (e) {
         console.error(e.response ? e.response.body : e.message ? e.message : e)
-        res.status(500).send(e)
+        res.status(500).json({ message: 'Unable to generate token.' })
     }
 }
 
