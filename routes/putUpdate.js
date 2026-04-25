@@ -6,7 +6,7 @@ import controller from '../db-controller.js'
 import auth from '../auth/index.js'
 
 router.route('/')
-    .put(auth.checkJwt, controller.putUpdate)
+    .put(auth.authRateLimiter, auth.checkJwt, controller.putUpdate)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for updating, please use PUT to update this object.'
         res.status(405)
