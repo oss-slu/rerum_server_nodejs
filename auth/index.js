@@ -1,5 +1,6 @@
 import { auth } from 'express-oauth2-jwt-bearer'
 import config from '../config/index.js'
+import rateLimit from 'express-rate-limit'
 
 const authRateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -102,7 +103,7 @@ const _extractUser = (req, res, next) => {
  *   // do authorized things
  * });
  */
-const checkJwt = [READONLY, authRateLimiter, auth(), _tokenError, _extractUser]
+const checkJwt = [READONLY, auth(), _tokenError, _extractUser]
 
 /**
  * Public API proxy to generate new access tokens through Auth0
@@ -216,6 +217,7 @@ function READONLY(req, res, next) {
 }
 
 export default {
+    authRateLimiter,
     checkJwt,
     generateNewAccessToken,
     generateNewRefreshToken,

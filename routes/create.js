@@ -6,7 +6,7 @@ import controller from '../db-controller.js'
 import auth from '../auth/index.js'
 
 router.route('/')
-    .post(auth.checkJwt, controller.create)
+    .post(auth.checkJwt, controller.create, auth.authRateLimiter)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for creating, please use POST.'
         res.status(405)

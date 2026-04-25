@@ -18,11 +18,11 @@ router.get('/register', (req, res, next) => {
       res.status(200).send(`https://cubap.auth0.com/authorize?${params}`)
   })
 
-router.post('/request-new-access-token',auth.generateNewAccessToken)
-router.post('/request-new-refresh-token',auth.generateNewRefreshToken)
+router.post('/request-new-access-token',auth.generateNewAccessToken, auth.authRateLimiter)
+router.post('/request-new-refresh-token',auth.generateNewRefreshToken, auth.authRateLimiter)
 
 // Verifies good tokens are from RERUM.  Fails with 401 on tokens from other platforms, or bad tokens in genreal.
-router.get('/verify', auth.checkJwt, (req, res, next) => {
+router.get('/verify', auth.checkJwt, auth.authRateLimiter, (req, res, next) => {
   const generatorAgent = getAgentClaim(req, next)
   res.set("Content-Type", "text/plain")
   res.status(200)
