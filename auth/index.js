@@ -20,7 +20,27 @@ const parseAuthHeaderPayload = (req) => {
     const payload = token.split('.')[1]
     return JSON.parse(Buffer.from(payload, 'base64').toString())
 }
+const parseAuthHeaderPayload = (req) => {
+    const authHeader = req.header('authorization')
+    if (!authHeader || typeof authHeader !== 'string') {
+        throw new Error('Missing or invalid authorization header')
+    }
 
+    const [, token] = authHeader.split(' ')
+    if (!token) {
+        throw new Error('Malformed authorization header')
+    }
+
+    const parts = token.split('.')
+    if (parts.length < 2) {
+        throw new Error('Malformed JWT token')
+    }
+
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const payloadJson = Buffer.from(base64, 'base64').toString()
+
+    return JSON.parse(payloadJson)
+}
 /**
  * Request a token object from Auth0 using the provided form payload.
  * @param {Object} form - Auth0 token request payload
