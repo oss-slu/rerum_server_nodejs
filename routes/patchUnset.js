@@ -1,10 +1,17 @@
 import express from 'express'
+import rateLimit from 'express-rate-limit'
 const router = express.Router()
 //This controller will handle all MongoDB interactions.
 import controller from '../db-controller.js'
 import auth from '../auth/index.js'
 import rest from '../rest.js'
 
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100
+})
+
+router.use(limiter)
 router.use(auth.checkJwt, auth.authRateLimiter)
 
 router.route('/')
