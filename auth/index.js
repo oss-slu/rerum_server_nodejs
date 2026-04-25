@@ -1,6 +1,14 @@
 import { auth } from 'express-oauth2-jwt-bearer'
 import config from '../config/index.js'
 
+const authRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: 'Too many requests. Please try again later.' }
+})
+
 /**
  * Parse and decode the JWT payload from the Authorization header.
  * @param {Object} req - Express request object
@@ -94,7 +102,7 @@ const _extractUser = (req, res, next) => {
  *   // do authorized things
  * });
  */
-const checkJwt = [READONLY, auth(), _tokenError, _extractUser]
+const checkJwt = [READONLY, authRateLimiter, auth(), _tokenError, _extractUser]
 
 /**
  * Public API proxy to generate new access tokens through Auth0
