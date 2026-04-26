@@ -100,7 +100,6 @@ The `db-controller.js` is a facade that imports from specialized controller modu
 - `controllers/release.js`: Object release (immutability)
 - `controllers/bulk.js`: Bulk create and update operations
 - `controllers/search.js`: MongoDB text search (searchAsWords, searchAsPhrase)
-- `controllers/gog.js`: Gallery of Glosses specific operations (fragments, glosses, expand)
 - `controllers/utils.js`: Shared utilities (ID generation, slug handling, agent claims)
 
 **4. Authentication & Authorization:**
@@ -113,7 +112,6 @@ The `db-controller.js` is a facade that imports from specialized controller modu
 **5. Special Features:**
 - **Slug IDs:** Optional human-readable IDs via Slug header (e.g., "my-annotation")
 - **PATCH Override:** X-HTTP-Method-Override header allows POST to emulate PATCH for clients without PATCH support
-- **GOG Routes:** Specialized endpoints for Gallery of Glosses project (`/gog/fragmentsInManuscript`, `/gog/glossesInManuscript`)
 - **Content Negotiation:** Handles both `@id`/`@context` (JSON-LD) and `id` (plain JSON) patterns
 
 ### Directory Structure
