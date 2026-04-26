@@ -54,8 +54,7 @@ const bulkCreate = async function (req, res, next) {
     
     const gatekeep = documents.filter(d=> {
     // Each item must be valid JSON, but can't be an array.
-        if (!isValidJsonObject(d)) return true
-
+    if (!isValidJsonObject(d)) return true
         // Items must not have an @id, and in some cases same for id.
         const idcheck = _contextid(d["@context"]) ? (d.id ?? d["@id"]) : d["@id"]
         if(idcheck) return true    // Reject items WITH an id (creates must not have one)
