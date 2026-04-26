@@ -1,11 +1,11 @@
 import { jest } from "@jest/globals"
-import dotenv from "dotenv"
-dotenv.config()
+// dotenv.config() is no longer needed; config module handles environment loading
 
 // Only real way to test an express route is to mount it and call it so that we can use the req, res, next.
 import express from "express"
 import request from "supertest"
 import controller from '../../db-controller.js'
+import config from '../../config/index.js'
 
 // Here is the auth mock so we get a req.user so controller.create can function without a NPE.
 const addAuth = (req, res, next) => {
@@ -23,7 +23,7 @@ routeTester.use("/unset", [addAuth, controller.patchUnset])
 it("'/unset' route functions", async () => {
   const response = await request(routeTester)
     .patch("/unset")
-    .send({"@id":`${process.env.RERUM_ID_PREFIX}11111`, "test_obj":null})
+    .send({"@id":`${config.RERUM_ID_PREFIX}11111`, "test_obj":null})
     .set('Content-Type', 'application/json; charset=utf-8')
     .then(resp => resp)
     .catch(err => err)
