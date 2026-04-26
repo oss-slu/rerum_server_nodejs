@@ -18,5 +18,6 @@ describe('public API entry point', () => {
     server.on('listening', () => {
       server.close(() => done())
     })
+    server.on('error', (err) => done(err))
   })
 })

@@ -86,6 +86,7 @@ Token: ${token}`
 You are Forbidden from performing this action. The request does not contain an "Authorization" header.
 Make sure you have registered at ${config.RERUM_PREFIX}. `
             }
+            break
         case 404:
             error.message += `
 The requested web page or resource could not be found.`
