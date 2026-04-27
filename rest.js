@@ -56,59 +56,57 @@ Your token is not in the correct format.  It should be a Bearer token formatted 
     switch (error.status) {
         case 400:
             //"Bad Request", most likely because the body and Content-Type are not aligned.  Could be bad JSON.
-            error.message += `
-The body of your request was invalid. Please make sure it is a valid content-type and that the body matches that type.
-If the body is JSON, make sure it is valid JSON.`
+            error.message = error.message || 
+                 "Invalid request: Ensure your request body and Content-Type are correct. If sending JSON, verify it is valid.";
             break
         case 401:
             //The requesting agent is known from the request.  That agent does not match __rerum.generatedBy.  Unauthorized.
             if (token) {
-                error.message += `
-The token provided is Unauthorized.  Please check that it is your token and that it is not expired. 
-Token: ${token} `
+                error.message = error.message || 
+                    "Unauthorized: The provided token is invalid or expired. Verify your Bearer token.";
             }
             else {
-                error.message += `
-The request does not contain an "Authorization" header and so is Unauthorized. Please include a token with your requests
-like "Authorization: Bearer <token>". Make sure you have registered at ${config.RERUM_PREFIX}.`
+                error.message = error.message || 
+                    `Unauthorized: Missing Authorization header. Include a Bearer token (Authorization: Bearer <token>). Register at ${config.RERUM_PREFIX}.`;
             }
             break
         case 403:
             //Forbidden to use this.  The provided Bearer does not have the required privileges. 
             if (token) {
-                error.message += `
-You are Forbidden from performing this action.  Check your privileges.
+                error.message = error.message ||
+`You are Forbidden from performing this action.  Check your privileges.
 Token: ${token}`
             }
             else {
                 //If there was no Token, this would be a 401.  If you made it here, you didn't REST.
-                error.message += `
-You are Forbidden from performing this action. The request does not contain an "Authorization" header.
-Make sure you have registered at ${config.RERUM_PREFIX}. `
+                error.message = error.message ||
+                    `Forbidden: No Authorization token provided. Ensure you are authenticated via ${config.RERUM_PREFIX}.`;
             }
             break
         case 404:
-            error.message += `
-The requested web page or resource could not be found.`
+            error.message = error.message || 
+                "Not Found: The requested resource does not exist or the endpoint is incorrect.";
             break
         case 405:
-            // These are all handled in api-routes.js already.
+            error.message = error.message || 
+                "Method Not Allowed: Check the HTTP method used for this endpoint.";
             break
         case 409:
-            // These are all handled in db-controller.js already.
+            error.message = error.message || 
+                "Conflict: The request could not be completed due to a conflict with the current state of the resource.";
             break
         case 501:
-            // Not implemented.  Handled upstream.
+            error.message = error.message || 
+                "Not Implemented: This functionality is not yet supported.";
             break
         case 503:
-            //RERUM is down or readonly.  Handled upstream.
+            error.message = error.message || 
+                "Service Unavailable: The server is temporarily unable to handle the request.";
             break
         case 500:
-        default:
-            //Really bad, probably not specifically caught.  
-            error.message += `
-RERUM experienced a server issue while performing this action.
-It may not have completed at all, and most likely did not complete successfully.`
+        default:  
+            error.message = error.message ||
+                 "Internal Server Error: An unexpected error occurred. Please try again later.";
     }
     console.error(error)
     res.set("Content-Type", "text/plain; charset=utf-8")
