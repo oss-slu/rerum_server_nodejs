@@ -65,6 +65,15 @@ documentation, but broadly, you will find:
 
 ## 🌟👍 Contributors 👍🌟
 Trying to contribute or perform a fix in the public RERUM API?  If not, are you _sure_ you don't want to?  Read the [Contributors Guide](CONTRIBUTING.md) for inspiration!  If you are trying to set up your own RERUM then keep reading to learn more.
+
+## Install via npm
+
+If published as a package, install using:
+
+```shell
+npm install rerum_server_nodejs
+```
+This allows the use of the exported API programmatically without cloning the repository.
   
 ### Installation
 
@@ -99,6 +108,9 @@ DOWN = false
 READONLY = false
 ```
 
+**Important:** Do not commit `.env` files or include secrets in version control.
+These files are excluded from the published npm package to prevent leaking sensitive credentials.
+
 #### Set Up Auth0 Authorization
 Please contact the [Research Computing Group at Saint Louis University](https://github.com/CenterForDigitalHumanities) via an E-mail to research.computing@slu.edu for more information and assistance with this step of the installation process.
 
@@ -125,6 +137,24 @@ And start the app
 npm start
 ```
 To stop the application, kill or exit the process via your shell (<kbd>CTRL + C</kbd> or <kbd>CTRL + X</kbd>).
+
+## Packaging and Publishing
+
+Before publishing this package to npm, verify that only the intended files are included and that no sensitive data (such as `.env`) is exposed.
+
+### Check package contents
+
+```shell
+npm run pack:check
+```
+
+### Simulate publishing
+
+```shell
+npm run publish:dry-run
+```
+This ensures the package can be published successfully without actually uploading it.
+
 
 ## Who is to blame?
 The developers in the Research Computing Group at Saint Louis University authored and maintain this service.
