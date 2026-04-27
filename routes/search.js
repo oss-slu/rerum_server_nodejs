@@ -1,6 +1,14 @@
 import express from 'express'
 const router = express.Router()
 import controller from '../db-controller.js'
+import rateLimit from 'express-rate-limit'
+
+const searchRateLimiter = rateLimit({
+     windowMs: 15 * 60 * 1000, // 15 minutes
+     max: 100, // limit each IP to 100 requests per window
+     standardHeaders: true,
+     legacyHeaders: false
+})
 
 /**
  * Handle POST /v1/api/search - Full-text search by words
@@ -19,7 +27,7 @@ export async function handleSearchAsWords(req, res, next) {
 }
 
 router.route('/')
-    .post(handleSearchAsWords)
+    .post(searchRateLimiter, handleSearchAsWords)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for search.  Please use POST.'
         res.status(405)
@@ -43,7 +51,7 @@ export async function handleSearchAsPhrase(req, res, next) {
 }
 
 router.route('/phrase')
-    .post(handleSearchAsPhrase)
+    .post(searchRateLimiter, handleSearchAsPhrase)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for search.  Please use POST.'
         res.status(405)

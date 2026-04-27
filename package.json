@@ -48,7 +48,8 @@
     "express-oauth2-jwt-bearer": "~1.7.1",
     "express-urlrewrite": "~2.0.3",
     "mongodb": "^7.0.0",
-    "morgan": "~1.10.1"
+    "morgan": "~1.10.1",
+    "express-rate-limit": "^8.4.0"
   },
   "devDependencies": {
     "@jest/globals": "^30.2.0",

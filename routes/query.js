@@ -2,6 +2,14 @@ import express from 'express'
 const router = express.Router()
 //This controller will handle all MongoDB interactions.
 import controller from '../db-controller.js'
+import rateLimit from 'express-rate-limit'
+
+const queryRateLimiter = rateLimit({
+     windowMs: 15 * 60 * 1000, // 15 minutes
+     max: 100,
+     standardHeaders: true,
+     legacyHeaders: false
+})
 
 /**
  * Handle POST /v1/api/query - Query objects by matching properties
@@ -34,8 +42,8 @@ export async function handleQueryHead(req, res, next) {
 }
 
 router.route('/')
-    .post(handleQuery)
-    .head(handleQueryHead)
+    .post(queryRateLimiter, handleQuery)
+    .head(queryRateLimiter, handleQueryHead)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for requesting objects with matching properties.  Please use POST.'
         res.status(405)
