@@ -34,8 +34,8 @@ export async function handleIdHead(req, res, next) {
 }
 
 router.route('/:_id')
-    .get(handleId)
-    .head(handleIdHead)
+    .get(idRouteLimiter, handleId)
+    .head(idRouteLimiter, handleIdHead)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method, please use GET.'
         res.status(405)

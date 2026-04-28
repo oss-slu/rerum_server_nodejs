@@ -17,12 +17,12 @@ import auth from '../auth/index.js'
  * @param {function} next - Express next middleware
  * @returns {Promise<object>} Released object metadata with updated __rerum state
  */
-export async function handleRelease(req, res, next) {
-    return controller.release(req, res, next)
-}
+// export async function handleRelease(req, res, next) {
+//     return controller.release(req, res, next)
+// }
 
 router.route('/:_id')
-    .patch(auth.checkJwt, handleRelease)
+    .patch(releaseRateLimiter, auth.checkJwt, handleRelease)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for releasing, please use PATCH to release this object.'
         res.status(405)

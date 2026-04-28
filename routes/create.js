@@ -18,12 +18,12 @@ import auth from '../auth/index.js'
  * @param {function} next - Express next middleware
  * @returns {Promise<object>} Created object with @id and __rerum metadata
  */
-export async function handleCreate(req, res, next) {
-    return controller.create(req, res, next)
-}
+// export async function handleCreate(req, res, next) {
+//     return controller.create(req, res, next)
+// }
 
 router.route('/')
-    .post(auth.checkJwt, handleCreate)
+    .post(auth.checkJwt, controller.create)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for creating, please use POST.'
         res.status(405)

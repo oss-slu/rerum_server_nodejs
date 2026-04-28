@@ -29,13 +29,13 @@ export async function handleQuery(req, res, next) {
  * @param {function} next - Express next middleware
  * @returns {Promise<void>} Head response with matching object count headers
  */
-export async function handleQueryHead(req, res, next) {
-    return controller.queryHeadRequest(req, res, next)
-}
+// export async function handleQueryHead(req, res, next) {
+//     return controller.queryHeadRequest(req, res, next)
+// }
 
 router.route('/')
-    .post(handleQuery)
-    .head(handleQueryHead)
+    .post(queryRateLimiter, handleQuery)
+    .head(queryRateLimiter, handleQueryHead)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for requesting objects with matching properties.  Please use POST.'
         res.status(405)

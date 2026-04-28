@@ -38,12 +38,12 @@ router.route('/')
  * @param {function} next - Express next middleware
  * @returns {Promise<object[]>} Array of matching objects
  */
-export async function handleSearchAsPhrase(req, res, next) {
-    return controller.searchAsPhrase(req, res, next)
-}
+// export async function handleSearchAsPhrase(req, res, next) {
+//     return controller.searchAsPhrase(req, res, next)
+// }
 
 router.route('/phrase')
-    .post(handleSearchAsPhrase)
+    .post(searchRateLimiter, handleSearchAsWords)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for search.  Please use POST.'
         res.status(405)

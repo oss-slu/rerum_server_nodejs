@@ -22,7 +22,7 @@ export async function handleDelete(req, res, next) {
 }
 
 router.route('/')
-    .delete(auth.checkJwt, handleDelete)
+    .delete(auth.checkJwt, controller.deleteObj)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for deleting, please use DELETE.'
         res.status(405)
@@ -30,7 +30,7 @@ router.route('/')
     })
 
 router.route('/:_id')
-    .delete(auth.checkJwt, handleDelete)
+    .delete(auth.checkJwt, controller.deleteObj)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for deleting, please use DELETE.'
         res.status(405)
