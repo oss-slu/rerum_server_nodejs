@@ -34,8 +34,8 @@ export async function handleQuery(req, res, next) {
 // }
 
 router.route('/')
-    .post(queryRateLimiter, handleQuery)
-    .head(queryRateLimiter, handleQueryHead)
+    .post(controller.query)
+    .head(controller.queryHeadRequest)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for requesting objects with matching properties.  Please use POST.'
         res.status(405)

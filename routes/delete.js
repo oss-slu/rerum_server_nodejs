@@ -17,9 +17,9 @@ import auth from '../auth/index.js'
  * @param {function} next - Express next middleware
  * @returns {Promise<object>} Deleted object metadata or status information
  */
-export async function handleDelete(req, res, next) {
-    return controller.deleteObj(req, res, next)
-}
+// export async function handleDelete(req, res, next) {
+//     return controller.deleteObj(req, res, next)
+// }
 
 router.route('/')
     .delete(auth.checkJwt, controller.deleteObj)

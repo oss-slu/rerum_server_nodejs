@@ -22,7 +22,7 @@ import auth from '../auth/index.js'
 // }
 
 router.route('/:_id')
-    .patch(releaseRateLimiter, auth.checkJwt, handleRelease)
+    .patch(auth.checkJwt, controller.release)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for releasing, please use PATCH to release this object.'
         res.status(405)

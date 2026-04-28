@@ -14,12 +14,12 @@ import controller from '../db-controller.js'
  * @param {function} next - Express next middleware
  * @returns {Promise<object[]>} Array of matching objects
  */
-export async function handleSearchAsWords(req, res, next) {
-    return controller.searchAsWords(req, res, next)
-}
+// export async function handleSearchAsWords(req, res, next) {
+//     return controller.searchAsWords(req, res, next)
+// }
 
 router.route('/')
-    .post(handleSearchAsWords)
+    .post(controller.searchAsWords)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for search.  Please use POST.'
         res.status(405)
@@ -43,7 +43,7 @@ router.route('/')
 // }
 
 router.route('/phrase')
-    .post(searchRateLimiter, handleSearchAsWords)
+    .post(controller.searchAsPhrase)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for search.  Please use POST.'
         res.status(405)

@@ -14,9 +14,9 @@ import controller from '../db-controller.js'
  * @param {function} next - Express next middleware
  * @returns {Promise<object>} Retrieved object or deleted object metadata
  */
-export async function handleId(req, res, next) {
-    return controller.id(req, res, next)
-}
+// export async function handleId(req, res, next) {
+//     return controller.id(req, res, next)
+// }
 
 /**
  * Handle HEAD /v1/id/:_id - Retrieve metadata headers for an object by ID or slug
@@ -29,13 +29,13 @@ export async function handleId(req, res, next) {
  * @param {function} next - Express next middleware
  * @returns {Promise<void>} Head response with object metadata headers
  */
-export async function handleIdHead(req, res, next) {
-    return controller.idHeadRequest(req, res, next)
-}
+// export async function handleIdHead(req, res, next) {
+//     return controller.idHeadRequest(req, res, next)
+// }
 
 router.route('/:_id')
-    .get(idRouteLimiter, handleId)
-    .head(idRouteLimiter, handleIdHead)
+    .get(controller.id)
+    .head(controller.idHeadRequest)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method, please use GET.'
         res.status(405)
