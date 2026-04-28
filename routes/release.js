@@ -6,21 +6,13 @@ import controller from '../db-controller.js'
 import auth from '../auth/index.js'
 
 /**
- * Handle PATCH /v1/api/release/:_id - Release an object to make it immutable
+ * PATCH /v1/api/release/:_id - Release an object to make it immutable
  * Requires JWT authentication
- *
- * @async
- * @param {object} req - Express request
+ * 
  * @param {string} req.params._id - Object ID or slug to release
- * @param {object} req.user - Authenticated user from JWT
- * @param {object} res - Express response
- * @param {function} next - Express next middleware
- * @returns {Promise<object>} Released object metadata with updated __rerum state
+ * @param {object} req.user - Authenticated user from JWT token
+ * @returns {object} Released object metadata with updated __rerum state
  */
-// export async function handleRelease(req, res, next) {
-//     return controller.release(req, res, next)
-// }
-
 router.route('/:_id')
     .patch(auth.checkJwt, controller.release)
     .all((req, res, next) => {

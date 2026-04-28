@@ -5,22 +5,14 @@ import controller from '../db-controller.js'
 import auth from '../auth/index.js'
 
 /**
- * Handle DELETE /v1/api/delete - Delete an object by body or ID
+ * DELETE /v1/api/delete or DELETE /v1/api/delete/:_id - Delete an object
  * Requires JWT authentication
- *
- * @async
- * @param {object} req - Express request
- * @param {string} [req.params._id] - Optional object ID from the URL
+ * 
+ * @param {string} [req.params._id] - Optional object ID from URL
  * @param {object} req.body - Object containing delete instructions
- * @param {object} req.user - Authenticated user from JWT
- * @param {object} res - Express response
- * @param {function} next - Express next middleware
- * @returns {Promise<object>} Deleted object metadata or status information
+ * @param {object} req.user - Authenticated user from JWT token
+ * @returns {object} Deleted object metadata or status information
  */
-// export async function handleDelete(req, res, next) {
-//     return controller.deleteObj(req, res, next)
-// }
-
 router.route('/')
     .delete(auth.checkJwt, controller.deleteObj)
     .all((req, res, next) => {

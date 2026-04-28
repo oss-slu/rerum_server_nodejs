@@ -4,35 +4,13 @@ const router = express.Router()
 import controller from '../db-controller.js'
 
 /**
- * Handle POST /v1/api/query - Query objects by matching properties
+ * POST /v1/api/query - Query objects by matching properties
+ * HEAD /v1/api/query - Query head request for matching objects
  * Public endpoint, no authentication required
- *
- * @async
- * @param {object} req - Express request
+ * 
  * @param {object} req.body - Query object with properties to match
- * @param {object} res - Express response
- * @param {function} next - Express next middleware
- * @returns {Promise<object[]>} Array of matching objects
+ * @returns {object[]} Array of matching objects
  */
-export async function handleQuery(req, res, next) {
-    return controller.query(req, res, next)
-}
-
-/**
- * Handle HEAD /v1/api/query - Query head request for matching objects
- * Public endpoint, no authentication required
- *
- * @async
- * @param {object} req - Express request
- * @param {object} req.body - Query object with properties to match
- * @param {object} res - Express response
- * @param {function} next - Express next middleware
- * @returns {Promise<void>} Head response with matching object count headers
- */
-// export async function handleQueryHead(req, res, next) {
-//     return controller.queryHeadRequest(req, res, next)
-// }
-
 router.route('/')
     .post(controller.query)
     .head(controller.queryHeadRequest)

@@ -6,22 +6,14 @@ import controller from '../db-controller.js'
 import auth from '../auth/index.js'
 
 /**
- * Handle POST /v1/api/create - Create new object
+ * POST /v1/api/create - Create new object
  * Requires JWT authentication
- *
- * @async
- * @param {object} req - Express request
+ * 
  * @param {object} req.body - JSON object to create
  * @param {string} [req.body.@context] - JSON-LD context (optional)
- * @param {object} req.user - Authenticated user from JWT
- * @param {object} res - Express response
- * @param {function} next - Express next middleware
- * @returns {Promise<object>} Created object with @id and __rerum metadata
+ * @param {object} req.user - Authenticated user from JWT token
+ * @returns {object} Created object with @id and __rerum metadata
  */
-// export async function handleCreate(req, res, next) {
-//     return controller.create(req, res, next)
-// }
-
 router.route('/')
     .post(auth.checkJwt, controller.create)
     .all((req, res, next) => {
