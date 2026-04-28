@@ -7,7 +7,7 @@
 import { newID, isValidID, db } from '../database/client.js'
 import { isDeleted, isReleased, isGenerator } from '../predicates.js'
 import config from '../config/index.js'
-import { createExpressError, getAgentClaim, parseDocumentID, getAllVersions, getAllDescendants } from './utils.js'
+import { createError, createExpressError, getAgentClaim, parseDocumentID, getAllVersions, getAllDescendants } from './utils.js'
 
 /**
  * Mark an object as deleted in the database.
@@ -23,7 +23,8 @@ import { createExpressError, getAgentClaim, parseDocumentID, getAllVersions, get
  * */
 const deleteObj = async function(req, res, next) {
     let id
-    let err = { message: `` }
+    let errMessage = ""
+    let errStatus = 0
     try {
         id = req.params["_id"] ?? parseDocumentID(JSON.parse(JSON.stringify(req.body))["@id"]) ?? parseDocumentID(JSON.parse(JSON.stringify(req.body))["id"])
     } catch(error){
@@ -41,25 +42,19 @@ const deleteObj = async function(req, res, next) {
     if (null !== originalObject) {
         let safe_original = JSON.parse(JSON.stringify(originalObject))
         if (isDeleted(safe_original)) {
-            err = Object.assign(err, {
-                message: `The object you are trying to delete is already deleted. ${err.message}`,
-                status: 403
-            })
+            errMessage = `The object you are trying to delete is already deleted. ${errMessage}`
+            errStatus = 403
         }
         else if (isReleased(safe_original)) {
-            err = Object.assign(err, {
-                message: `The object you are trying to delete is released. Fork to make changes. ${err.message}`,
-                status: 403
-            })
+            errMessage = `The object you are trying to delete is released. Fork to make changes. ${errMessage}`
+            errStatus = 403
         }
         else if (!isGenerator(safe_original, agentRequestingDelete)) {
-            err = Object.assign(err, {
-                message: `You are not the generating agent for this object and so are not authorized to delete it. ${err.message}`,
-                status: 401
-            })
+            errMessage = `You are not the generating agent for this object and so are not authorized to delete it. ${errMessage}`
+            errStatus = 401
         }
-        if (err.status) {
-            next(createExpressError(err))
+        if (errStatus) {
+            next(createExpressError(createError(errStatus, errMessage)))
             return
         }
         let preserveID = safe_original["@id"]
@@ -82,9 +77,7 @@ const deleteObj = async function(req, res, next) {
             }
             if (result.modifiedCount === 0) {
                 //result didn't error out, the action was not performed.  Sometimes, this is a neutral thing.  Sometimes it is indicative of an error.
-                err.message = "The original object was not replaced with the deleted object in the database."
-                err.status = 500
-                next(createExpressError(err))
+                next(createExpressError(createError(500, "The original object was not replaced with the deleted object in the database.")))
                 return
             }
             //204 to say it is deleted and there is nothing in the body
@@ -93,14 +86,10 @@ const deleteObj = async function(req, res, next) {
             return
         }
         //Not sure we can get here, as healHistoryTree might throw and error.
-        err.message = "The history tree for the object being deleted could not be mended."
-        err.status = 500
-        next(createExpressError(err))
+        next(createExpressError(createError(500, "The history tree for the object being deleted could not be mended.")))
         return
     }
-    err.message = "No object with this id could be found in RERUM.  Cannot delete."
-    err.status = 404
-    next(createExpressError(err))
+    next(createExpressError(createError(404, "No object with this id could be found in RERUM.  Cannot delete.")))
 }
 
 /**
