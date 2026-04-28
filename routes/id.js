@@ -2,14 +2,6 @@ import express from 'express'
 const router = express.Router()
 //This controller will handle all MongoDB interactions.
 import controller from '../db-controller.js'
-import rateLimit from 'express-rate-limit'
-
-const idRouteLimiter = rateLimit({
-     windowMs: 15 * 60 * 1000, // 15 minutes
-     max: 100, // limit each IP to 100 requests per windowMs
-     standardHeaders: true,
-     legacyHeaders: false
-})
 
 /**
  * Handle GET /v1/id/:_id - Retrieve object by ID or slug
@@ -42,8 +34,8 @@ export async function handleIdHead(req, res, next) {
 }
 
 router.route('/:_id')
-    .get(idRouteLimiter, handleId)
-    .head(idRouteLimiter, handleIdHead)
+    .get(handleId)
+    .head(handleIdHead)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method, please use GET.'
         res.status(405)

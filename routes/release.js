@@ -4,12 +4,6 @@ const router = express.Router()
 //This controller will handle all MongoDB interactions.
 import controller from '../db-controller.js'
 import auth from '../auth/index.js'
-import rateLimit from 'express-rate-limit'
-
-const releaseRateLimiter = rateLimit({
-     windowMs: 15 * 60 * 1000, // 15 minutes
-     max: 100, // limit each IP to 100 requests per windowMs
-})
 
 /**
  * Handle PATCH /v1/api/release/:_id - Release an object to make it immutable
@@ -28,7 +22,7 @@ export async function handleRelease(req, res, next) {
 }
 
 router.route('/:_id')
-    .patch(releaseRateLimiter, auth.checkJwt, handleRelease)
+    .patch(auth.checkJwt, handleRelease)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for releasing, please use PATCH to release this object.'
         res.status(405)

@@ -4,12 +4,6 @@ const router = express.Router()
 //This controller will handle all MongoDB interactions.
 import controller from '../db-controller.js'
 import auth from '../auth/index.js'
-import rateLimit from 'express-rate-limit'
-
- const createRateLimiter = rateLimit({
-     windowMs: 15 * 60 * 1000, // 15 minutes
-     max: 100
- })
 
 /**
  * Handle POST /v1/api/create - Create new object
@@ -29,7 +23,7 @@ export async function handleCreate(req, res, next) {
 }
 
 router.route('/')
-    .post(auth.checkJwt, createRateLimiter, handleCreate)
+    .post(auth.checkJwt, handleCreate)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for creating, please use POST.'
         res.status(405)

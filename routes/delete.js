@@ -3,14 +3,6 @@ const router = express.Router()
 //This controller will handle all MongoDB interactions.
 import controller from '../db-controller.js'
 import auth from '../auth/index.js'
-import rateLimit from 'express-rate-limit'
-
-const deleteLimiter = rateLimit({
-     windowMs: 15 * 60 * 1000,
-     max: 100,
-     standardHeaders: true,
-     legacyHeaders: false
-})
 
 /**
  * Handle DELETE /v1/api/delete - Delete an object by body or ID
@@ -30,7 +22,7 @@ export async function handleDelete(req, res, next) {
 }
 
 router.route('/')
-    .delete(deleteLimiter, auth.checkJwt, handleDelete)
+    .delete(auth.checkJwt, handleDelete)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for deleting, please use DELETE.'
         res.status(405)
@@ -38,7 +30,7 @@ router.route('/')
     })
 
 router.route('/:_id')
-    .delete(deleteLimiter, auth.checkJwt, handleDelete)
+    .delete(auth.checkJwt, handleDelete)
     .all((req, res, next) => {
         res.statusMessage = 'Improper request method for deleting, please use DELETE.'
         res.status(405)
