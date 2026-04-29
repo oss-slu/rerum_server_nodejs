@@ -1,0 +1,34 @@
+name: Documentation Quality Check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  docs-check:
+    name: Validate documentation files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check required documentation files
+        run: |
+          test -f README.md
+          test -f package.json
+
+      - name: Check for JSDoc comments in utility files
+        run: |
+          grep -q "@param" headers.js
+          grep -q "@returns" headers.js
+          grep -q "@param" rest.js
+          grep -q "@returns" rest.js
+          grep -q "@param" predicates.js
+          grep -q "@returns" predicates.js
+          grep -q "@param" versioning.js
+          grep -q "@returns" versioning.js
+
+      - name: Check for TODO placeholders in documentation
+        run: |
+          ! grep -R "TODO: documentation" README.md *.js
