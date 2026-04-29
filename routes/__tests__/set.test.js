@@ -1,11 +1,11 @@
 import { jest } from "@jest/globals"
-import dotenv from "dotenv"
-dotenv.config()
-
-// Only real way to test an express route is to mount it and call it so that we can use the req, res, next.
+// dotenv.config() is no longer needed; config module handles environment loading
 import express from "express"
 import request from "supertest"
 import controller from '../../db-controller.js'
+import config from '../../config/index.js'
+
+// Only real way to test an express route is to mount it and call it so that we can use the req, res, next.
 
 // Here is the auth mock so we get a req.user and the controller can function without a NPE.
 const addAuth = (req, res, next) => {
@@ -34,19 +34,19 @@ const unique = new Date(Date.now()).toISOString().replace("Z", "")
 it("'/set' route functions", async () => {
   const response = await request(routeTester)
     .patch("/set")
-    .send({"@id":`${process.env.RERUM_ID_PREFIX}11111`, "test_set":unique})
+    .send({"@id":`${config.RERUM_ID_PREFIX}11111`, "test_set":unique})
     .set('Content-Type', 'application/json; charset=utf-8')
     .then(resp => resp)
     .catch(err => err)
-  expect(response.header.location).toBe(response.body["@id"])
-  expect(response.headers["location"]).not.toBe(`${process.env.RERUM_ID_PREFIX}11111`)
-  expect(response.statusCode).toBe(200)
-  expect(response.body._id).toBeUndefined()
-  expect(response.body["test_set"]).toBe(unique)
-  expect(response.headers["content-length"]).toBeTruthy()
-  expect(response.headers["content-type"]).toBeTruthy()
-  expect(response.headers["date"]).toBeTruthy()
-  expect(response.headers["etag"]).toBeTruthy()
-  expect(response.headers["allow"]).toBeTruthy()
-  expect(response.headers["link"]).toBeTruthy()
+      expect(response.header.location).toBe(response.body["@id"])
+      expect(response.headers["location"]).not.toBe(`${config.RERUM_ID_PREFIX}11111`)
+      expect(response.statusCode).toBe(200)
+      expect(response.body._id).toBeUndefined()
+      expect(response.body["test_set"]).toBe(unique)
+      expect(response.headers["content-length"]).toBeTruthy()
+      expect(response.headers["content-type"]).toBeTruthy()
+      expect(response.headers["date"]).toBeTruthy()
+      expect(response.headers["etag"]).toBeTruthy()
+      expect(response.headers["allow"]).toBeTruthy()
+      expect(response.headers["link"]).toBeTruthy()
 })

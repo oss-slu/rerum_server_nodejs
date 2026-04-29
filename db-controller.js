@@ -18,7 +18,6 @@ import { patchUnset } from './controllers/patchUnset.js'
 import { bulkCreate, bulkUpdate } from './controllers/bulk.js'
 import { since, history, idHeadRequest, queryHeadRequest, sinceHeadRequest, historyHeadRequest } from './controllers/history.js'
 import { release } from './controllers/release.js'
-import { _gog_fragments_from_manuscript, _gog_glosses_from_manuscript, expand } from './controllers/gog.js'
 
 export default {
     index,
@@ -44,8 +43,5 @@ export default {
     sinceHeadRequest,
     historyHeadRequest,
     remove,
-    _gog_glosses_from_manuscript,
-    _gog_fragments_from_manuscript,
     idNegotiation,
-    expand
 }

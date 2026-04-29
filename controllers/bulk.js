@@ -13,43 +13,58 @@ import config from '../config/index.js'
 import { _contextid, ObjectID, createExpressError, getAgentClaim, parseDocumentID, idNegotiation } from './utils.js'
 
 /**
+ * Sets standard JSON response headers on the Express response object.
+ * @param {import('express').Response} res - Express response object
+ */
+function setJsonHeaders(res) {
+    res.set("Content-Type", "application/json; charset=utf-8")
+}
+
+//function to validate request body is a non-empty array
+function requireNonEmptyArrayBody(req) {
+    const documents = req.body
+    if (!Array.isArray(documents)) {
+        throw { message: "The request body must be an array of objects.", status: 400 }
+    }
+    if (documents.length === 0) {
+        throw { message: "No action on an empty array.", status: 400 }
+    }
+    return documents
+}
+
+//check if an item is valid JSON object (not array)
+function isValidJsonObject(d) {
+    return d !== null && typeof d === "object" && !Array.isArray(d)
+}
+
+/**
  * Create many objects at once with the power of MongoDB bulkWrite() operations.
  * 
  * @see https://www.mongodb.com/docs/manual/reference/method/db.collection.bulkWrite/
  */
 const bulkCreate = async function (req, res, next) {
-    res.set("Content-Type", "application/json; charset=utf-8")
-    const documents = req.body
-    let err = {}
-    if (!Array.isArray(documents)) {
-        err.message = "The request body must be an array of objects."
-        err.status = 400
-        next(createExpressError(err))
-        return
+    setJsonHeaders(res)
+
+    let documents
+    try {
+        documents = requireNonEmptyArrayBody(req)
+    } catch (err) {
+        return next(createExpressError(err))
     }
-    if (documents.length === 0) {
-        err.message = "No action on an empty array."
-        err.status = 400
-        next(createExpressError(err))
-        return
-    }
+    
     const gatekeep = documents.filter(d=> {
-        // Each item must be valid JSON, but can't be an array.
-        if(Array.isArray(d) || typeof d !== "object") return d
-        try {
-            JSON.parse(JSON.stringify(d))
-        } catch (err) {
-            return d
-        }
+    // Each item must be valid JSON, but can't be an array.
+    if (!isValidJsonObject(d)) return true
         // Items must not have an @id, and in some cases same for id.
         const idcheck = _contextid(d["@context"]) ? (d.id ?? d["@id"]) : d["@id"]
-        if(idcheck) return d
-    }) 
+        if(idcheck) return true    // Reject items WITH an id (creates must not have one)
+        return false
+    })
     if (gatekeep.length > 0) {
-        err.message = "All objects in the body of a `/bulkCreate` must be JSON and must not contain a declared identifier property."
-        err.status = 400
-        next(createExpressError(err))
-        return
+        return next(createExpressError({
+            message: "All objects in the body of a `/bulkCreate` must be JSON and must not contain a declared identifier property.",
+            status: 400
+        }))
     }
 
     // TODO: bulkWrite SLUGS? Maybe assign an id to each document and then use that to create the slug?
@@ -82,7 +97,6 @@ const bulkCreate = async function (req, res, next) {
     }
     try {
         let dbResponse = await db.bulkWrite(bulkOps, {'ordered':false})
-        res.set("Content-Type", "application/json; charset=utf-8")
         res.set("Link",dbResponse.result.insertedIds.map(r => `${config.RERUM_ID_PREFIX}${r._id}`)) // https://www.rfc-editor.org/rfc/rfc5988
         res.status(201)
         const estimatedResults = bulkOps.map(f=>{
@@ -106,40 +120,28 @@ const bulkCreate = async function (req, res, next) {
  * @see https://www.mongodb.com/docs/manual/reference/method/db.collection.bulkWrite/
  */
 const bulkUpdate = async function (req, res, next) {
-    res.set("Content-Type", "application/json; charset=utf-8")
-    const documents = req.body
-    let err = {}
+    setJsonHeaders(res)
+
+    let documents
+    try {
+        documents = requireNonEmptyArrayBody(req)
+    } catch (err) {
+        return next(createExpressError(err))
+    }
+
     let encountered = []
-    if (!Array.isArray(documents)) {
-        err.message = "The request body must be an array of objects."
-        err.status = 400
-        next(createExpressError(err))
-        return
-    }
-    if (documents.length === 0) {
-        err.message = "No action on an empty array."
-        err.status = 400
-        next(createExpressError(err))
-        return
-    }
     const gatekeep = documents.filter(d => {
-        // Each item must be valid JSON, but can't be an array.
-        if(Array.isArray(d) || typeof d !== "object") return d
-        try {
-            JSON.parse(JSON.stringify(d))
-        } catch (err) {
-            return d
-        }
-        // Items must have an @id, or in some cases an id will do
+        if (!isValidJsonObject(d)) return true
         const idcheck = _contextid(d["@context"]) ? (d.id ?? d["@id"]) : d["@id"]
-        if(!idcheck) return d
+        if (!idcheck) return true   // Reject items WITHOUT an id (updates need an id)
+        return false
     })
     // The empty {}s will cause this error
     if (gatekeep.length > 0) {
-        err.message = "All objects in the body of a `/bulkUpdate` must be JSON and must contain a declared identifier property."
-        err.status = 400
-        next(createExpressError(err))
-        return
+        return next(createExpressError({
+            message: "All objects in the body of a `/bulkUpdate` must be JSON and must contain a declared identifier property.",
+            status: 400
+        }))
     }
     // unordered bulkWrite() operations have better performance metrics.
     let bulkOps = []
@@ -186,7 +188,6 @@ const bulkUpdate = async function (req, res, next) {
     }
     try {
         let dbResponse = await db.bulkWrite(bulkOps, {'ordered':false})
-        res.set("Content-Type", "application/json; charset=utf-8")
         res.set("Link", dbResponse.result.insertedIds.map(r => `${config.RERUM_ID_PREFIX}${r._id}`)) // https://www.rfc-editor.org/rfc/rfc5988
         res.status(200)
         const estimatedResults = bulkOps.filter(f=>f.insertOne).map(f=>{
