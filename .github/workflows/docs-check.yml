@@ -20,14 +20,8 @@ jobs:
 
       - name: Check for JSDoc comments in utility files
         run: |
-          grep -q "@param" headers.js
-          grep -q "@returns" headers.js
-          grep -q "@param" rest.js
-          grep -q "@returns" rest.js
-          grep -q "@param" predicates.js
-          grep -q "@returns" predicates.js
-          grep -q "@param" versioning.js
-          grep -q "@returns" versioning.js
+            grep -R "@param" . --include="*.js"
+            grep -R "@returns" . --include="*.js"
 
       - name: Check for TODO placeholders in documentation
         run: |
