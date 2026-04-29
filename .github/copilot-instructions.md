@@ -125,7 +125,7 @@ After making changes, ALWAYS validate these scenarios:
 
 ### Key Directories
 - `/routes/` - Route handlers and API endpoints (Express routes)
-- `/controllers/` - Business logic controllers (CRUD operations, GOG-specific controllers)
+- `/controllers/` - Business logic controllers (CRUD operations, history, release, bulk operations)
 - `/database/` - Database connection and utilities (MongoDB integration)
 - `/auth/` - Authentication middleware (Auth0 JWT handling)
 - `/public/` - Static files (API.html, context.json, etc.)
@@ -145,7 +145,6 @@ After making changes, ALWAYS validate these scenarios:
 - **Database**: MongoDB for persistent storage, versioned objects
 - **Static Files**: Served directly from `/public` directory
 - **CORS**: Fully open ("*") for cross-origin requests
-- **Specialized Routes**: Gallery of Glosses (GOG) specific endpoints in `_gog_*.js` files
 
 ### Coding Style Guidelines
 - **Semicolons**: Avoid unnecessary semicolons (e.g., at the end of most lines)

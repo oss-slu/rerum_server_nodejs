@@ -32,10 +32,8 @@ export default app
  * additional listeners or configure timeouts before calling
  * `server.listen(...)`.
  *
- * For backwards compatibility, this function accepts a numeric port
- * as `createServer(0)` and returns the `Server` instance directly.
- *
- * @param {number|Object} [portOrOptions=process.env.PORT||3001] port override or options object.
+ * @param {number|string} [port=process.env.PORT??3001] port to assign to
+ *        the express app and eventually listen on
  * @returns {import('http').Server} http server instance
  */
 export function createServer(portOrOptions = process.env.PORT ?? 3001) {
@@ -107,7 +105,22 @@ export async function startAsync(options = {}) {
   const server = await createServerAsync(options)
   server.listen(port)
   server.on('listening', () => {
-    console.log('LISTENING ON ' + port)
+    console.log('LISTENING ON ' + p)
+  })
+  server.on('error', (error) => {
+    if (error.syscall !== 'listen') throw error
+    switch (error.code) {
+      case 'EACCES':
+        console.error(`Port ${p} requires elevated privileges`)
+        process.exit(1)
+        break
+      case 'EADDRINUSE':
+        console.error(`Port ${p} is already in use`)
+        process.exit(1)
+        break
+      default:
+        throw error
+    }
   })
   return server
 }

@@ -1,10 +1,9 @@
 import { jest } from "@jest/globals"
-import dotenv from "dotenv"
-dotenv.config()
 // Only real way to test an express route is to mount it and call it so that we can use the req, res, next.
 import express from "express"
 import request from "supertest"
 import controller from '../../db-controller.js'
+import config from '../../config/index.js'
 
 // Here is the auth mock so we get a req.user and the controller can function without a NPE.
 const addAuth = (req, res, next) => {
@@ -23,7 +22,7 @@ const unique = new Date(Date.now()).toISOString().replace("Z", "")
 it("'/patch' route functions", async () => {
   const response = await request(routeTester)
     .patch('/patch')
-    .send({"@id":`${process.env.RERUM_ID_PREFIX}11111`, "RERUM Update Test":unique})
+    .send({"@id":`${config.RERUM_ID_PREFIX}11111`, "RERUM Update Test":unique})
     .set("Content-Type", "application/json")
     .then(resp => resp)
     .catch(err => err)

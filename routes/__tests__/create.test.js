@@ -3,8 +3,9 @@ import express from "express"
 import request from "supertest"
 import { db } from '../../database/client.js'
 import controller from '../../db-controller.js'
+import config from '../../config/index.js'
 
-const rerum_uri = `${process.env.RERUM_ID_PREFIX}123456`
+const rerum_uri = `${config.RERUM_ID_PREFIX}123456`
 
 // Here is the auth mock so we get a req.user and the controller can function without a NPE.
 const addAuth = (req, res, next) => {
