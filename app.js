@@ -2,7 +2,6 @@
 
 import express from 'express'
 import path from 'path'
-import cookieParser from 'cookie-parser'
 import logger from 'morgan'
 import cors from 'cors'
 import indexRouter from './routes/index.js'
@@ -102,7 +101,6 @@ app.use(
   app.use(express.json())
   app.use(express.text())
   app.use(express.urlencoded({ extended: true }))
-  app.use(cookieParser())
 
 //Publicly available scripts, CSS, and HTML pages.
 app.use(express.static(path.join(__dirname, 'public')))
