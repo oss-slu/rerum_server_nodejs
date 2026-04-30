@@ -13,22 +13,12 @@ const addAuth = (req, res, next) => {
   next()
 }
 
-// Rate limiting for tests - allows unlimited requests in test environment
-import rateLimit from 'express-rate-limit'
-const limiter = rateLimit({
-    windowMs: 1000, // 1 second for tests
-    max: 1000, // allow many requests in test environment
-    message: 'Too many requests from this IP, please try again later.',
-    standardHeaders: true,
-    legacyHeaders: false,
-})
-
 const routeTester = new express()
 routeTester.use(express.json())
 routeTester.use(express.urlencoded({ extended: false }))
 
 // Mount our own /unset route without auth that will use controller.patchUnset
-routeTester.use("/unset", limiter, addAuth, controller.patchUnset)
+routeTester.use("/unset", addAuth, controller.patchUnset)
 
 it("'/unset' route functions", async () => {
   const response = await request(routeTester)
