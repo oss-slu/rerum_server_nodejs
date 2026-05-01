@@ -1,0 +1,35 @@
+name: PR Hygiene Check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  hygiene:
+    name: Check repository hygiene
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prevent committed environment files
+        run: |
+          if find . -name ".env" -o -name ".env.*" | grep -v "node_modules"; then
+            echo "Environment files should not be committed."
+            exit 1
+          fi
+
+      - name: Prevent node_modules from being committed
+        run: |
+          if find . -type d -name "node_modules" | grep .; then
+            echo "node_modules should not be committed."
+            exit 1
+          fi
+
+      - name: Check for merge conflict markers
+        run: |
+          if grep -R "<<<<<<<\|=======\|>>>>>>>" . --exclude-dir=.git --exclude-dir=node_modules; then
+            echo "Merge conflict markers found."
+            exit 1
+          fi
