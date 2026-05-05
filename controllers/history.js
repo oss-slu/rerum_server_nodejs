@@ -16,35 +16,7 @@ import { _contextid, ObjectID, createExpressError, getAgentClaim, parseDocumentI
  * @throws java.lang.Exception
  * @respond JSONArray to the response out for parsing by the client application.
  */
-const since = async function (req, res, next) {
-    res.set("Content-Type", "application/json; charset=utf-8")
-    let id = req.params["_id"]
-    let obj
-    try {
-        obj = await db.findOne({"$or":[{"_id": id}, {"__rerum.slug": id}]})
-    } catch (error) {
-        next(createExpressError(error))
-        return
-    }
-    if (null === obj) {
-        let err = {
-            message: `Cannot produce a history. There is no object in the database with id '${id}'.  Check the URL.`,
-            status: 404
-        }
-        next(createExpressError(err))
-        return
-    }
-    let all = await getAllVersions(obj)
-        .catch(error => {
-            console.error(error)
-            return []
-        })
-    let descendants = getAllDescendants(all, obj, [])
-    descendants =
-        descendants.map(o => idNegotiation(o))
-    res.set(configureLDHeadersFor(descendants))
-    res.json(descendants)
-}
+const since = (req, res, next) => getVersionHistory(req, res, next, getAllDescendants)
 
 /**
  * Public facing servlet action to find all upstream versions of an object.  This is the action the user hits with the API.
@@ -53,35 +25,7 @@ const since = async function (req, res, next) {
  * @respond JSONArray to the response out for parsing by the client application.
  * @throws Exception 
  */
-const history = async function (req, res, next) {
-    res.set("Content-Type", "application/json; charset=utf-8")
-    let id = req.params["_id"]
-    let obj
-    try {
-        obj = await db.findOne({"$or":[{"_id": id}, {"__rerum.slug": id}]})
-    } catch (error) {
-        next(createExpressError(error))
-        return
-    }
-    if (null === obj) {
-        let err = {
-            message: `Cannot produce a history. There is no object in the database with id '${id}'.  Check the URL.`,
-            status: 404
-        }
-        next(createExpressError(err))
-        return
-    }
-    let all = await getAllVersions(obj)
-        .catch(error => {
-            console.error(error)
-            return []
-        })
-    let ancestors = getAllAncestors(all, obj, [])
-    ancestors =
-        ancestors.map(o => idNegotiation(o))
-    res.set(configureLDHeadersFor(ancestors))
-    res.json(ancestors)
-}
+const history = (req, res, next) => getVersionHistory(req, res, next, getAllAncestors)
 
 /**
  * Allow for HEAD requests by @id via the RERUM getByID pattern /v1/id/
@@ -208,6 +152,35 @@ const historyHeadRequest = async function (req, res, next) {
     }
     res.set("Content-Length", 0)
     res.sendStatus(200)
+}
+
+const getVersionHistory = async (req, res, next, versionGetter) => {
+    res.set("Content-Type", "application/json; charset=utf-8")
+    let id = req.params["_id"]
+    let obj
+    try {
+        obj = await db.findOne({"$or":[{"_id": id}, {"__rerum.slug": id}]})
+    } catch (error) {
+        next(createExpressError(error))
+        return
+    }
+    if (null === obj) {
+        let err = {
+            message: `Cannot produce a history. There is no object in the database with id '${id}'.  Check the URL.`,
+            status: 404
+        }
+        next(createExpressError(err))
+        return
+    }
+    let all = await getAllVersions(obj)
+        .catch(error => {
+            console.error(error)
+            return []
+        })
+    let versions = versionGetter(all, obj, [])
+    versions = versions.map(o => idNegotiation(o))
+    res.set(configureLDHeadersFor(versions))
+    res.json(versions)
 }
 
 export { since, history, idHeadRequest, queryHeadRequest, sinceHeadRequest, historyHeadRequest }
