@@ -24,8 +24,8 @@ const config = {
   RERUM_CONTEXT: process.env.RERUM_CONTEXT ?? 'http://localhost:3001/v1/context.json',
   RERUM_API_VERSION: process.env.RERUM_API_VERSION ?? '1.0.0',
   BOT_AGENT: process.env.BOT_AGENT ?? '',
-  AUDIENCE: process.env.AUDIENCE ?? '',
-  ISSUER_BASE_URL: process.env.ISSUER_BASE_URL ?? '',
+  AUDIENCE: process.env.AUDIENCE ?? 'http://localhost:3001',
+  ISSUER_BASE_URL: process.env.ISSUER_BASE_URL ?? 'http://localhost:3001',
   BOT_TOKEN: process.env.BOT_TOKEN ?? '',
   PORT: parseInt(process.env.PORT ?? process.env.PORT_NUMBER ?? 3001, 10)
 }
