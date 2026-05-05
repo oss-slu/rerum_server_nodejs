@@ -16,7 +16,7 @@ routeTester.use(express.json())
 routeTester.use(express.urlencoded({ extended: false }))
 
 // Mount our own /patch route without auth that will use controller.patch
-routeTester.use("/patch", [addAuth, controller.patchUpdate])
+routeTester.use("/patch", addAuth, controller.patchUpdate)
 const unique = new Date(Date.now()).toISOString().replace("Z", "")
 
 it("'/patch' route functions", async () => {
