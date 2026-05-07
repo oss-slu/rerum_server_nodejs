@@ -9,7 +9,7 @@ import { newID, isValidID, db } from '../database/client.js'
 import { configureWebAnnoHeadersFor, configureLDHeadersFor, configureLastModifiedHeader } from '../headers.js'
 import { configureRerumOptions } from '../versioning.js'
 import config from '../config/index.js'
-import { _contextid, idNegotiation, generateSlugId, ObjectID, createExpressError, getAgentClaim, parseDocumentID } from './utils.js'
+import { _contextid, idNegotiation, generateSlugId, ObjectID, createError, createExpressError, getAgentClaim, parseDocumentID } from './utils.js'
 
 /**
  * Create a new Linked Open Data object in RERUM v1.
@@ -74,11 +74,7 @@ const query = async function (req, res, next) {
     const skip = parseInt(req.query.skip ?? 0)
     if (Object.keys(props).length === 0) {
         //Hey now, don't ask for everything...this can happen by accident.  Don't allow it.
-        let err = {
-            message: "Detected empty JSON object.  You must provide at least one property in the /query request body JSON.",
-            status: 400
-        }
-        next(createExpressError(err))
+        next(createExpressError(createError(400, "Detected empty JSON object.  You must provide at least one property in the /query request body JSON.")))
         return
     }
     try {
@@ -115,11 +111,7 @@ const id = async function (req, res, next) {
             res.json(match)
             return
         }
-        let err = {
-            "message": `No RERUM object with id '${id}'`,
-            "status": 404
-        } 
-        next(createExpressError(err))
+        next(createExpressError(createError(404, `No RERUM object with id '${id}'`)))
     } catch (error) {
         next(createExpressError(error))
     }
