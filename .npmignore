@@ -2,6 +2,8 @@
 docs/
 *.md
 !README.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
 CODEOWNERS
 
 # Test and mock files
@@ -12,12 +14,13 @@ __mocks__/
 coverage/
 jest.config.js
 
-# Backup folders / artifacts
+# Backup folders
 backups/
 *.backup
 *.bak
 *.swp
 *.tgz
+db-controller.js.backup
 
 # Local configuration files
 .env
@@ -25,6 +28,7 @@ backups/
 config.local.js
 *.local.js
 
-# Tooling and CI
-.github/
-.claude/
+.github/ 
+.claude/ 
+.env
+.env.*
