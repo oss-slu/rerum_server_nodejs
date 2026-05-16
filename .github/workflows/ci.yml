@@ -1,0 +1,32 @@
+name: RERUM CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  package-validation:
+    name: Validate npm package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build npm package tarball
+        run: npm pack
+
+      - name: Display packaged files
+        run: |
+          PACKAGE_FILE=$(ls *.tgz | head -n 1)
+          echo "Generated package: $PACKAGE_FILE"
+          tar -tf "$PACKAGE_FILE"
